@@ -1,0 +1,22 @@
+environment: dev
+project_root: .
+raw_root: raw
+lakehouse_root: data/lakehouse
+checkpoint_root: metadata/checkpoints
+report_root: reports
+default_format: parquet
+write_mode: append
+partition_columns:
+  bronze:
+    - dataset
+    - ingest_date
+  silver:
+    - dataset
+    - game_date
+spark:
+  app_name: riot-lakehouse-dev
+  master: local[*]
+  enable_delta: false
+riot:
+  platform: vn2
+  region: sea

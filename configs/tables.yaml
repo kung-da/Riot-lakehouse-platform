@@ -1,0 +1,44 @@
+bronze:
+  raw_json:
+    path: bronze/raw_json
+    description: Raw Riot API payloads with ingestion metadata.
+silver:
+  matches:
+    path: silver/matches
+    primary_key: match_id
+  participants:
+    path: silver/participants
+    primary_key: [match_id, puuid]
+  teams:
+    path: silver/teams
+    primary_key: [match_id, team_id]
+  summoners:
+    path: silver/summoners
+    primary_key: puuid
+  ranked:
+    path: silver/ranked
+    primary_key: [puuid, queue, tier, rank]
+  timeline_frames:
+    path: silver/timeline_frames
+    primary_key: [match_id, frame_index]
+  timeline_events:
+    path: silver/timeline_events
+    primary_key: [match_id, frame_index, event_index]
+gold:
+  player_metrics:
+    path: gold/player_metrics
+  champion_metrics:
+    path: gold/champion_metrics
+  role_metrics:
+    path: gold/role_metrics
+  rank_metrics:
+    path: gold/rank_metrics
+  team_objective_metrics:
+    path: gold/team_objective_metrics
+platinum:
+  match_win_features:
+    path: platinum/match_win_features
+  player_performance_features:
+    path: platinum/player_performance_features
+  champion_meta_features:
+    path: platinum/champion_meta_features

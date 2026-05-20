@@ -1,0 +1,25 @@
+environment: prod
+project_root: .
+raw_root: s3://REPLACE_ME/raw
+lakehouse_root: s3://REPLACE_ME/lakehouse
+checkpoint_root: s3://REPLACE_ME/metadata/checkpoints
+report_root: s3://REPLACE_ME/reports
+default_format: parquet
+write_mode: append
+partition_columns:
+  bronze:
+    - dataset
+    - ingest_date
+  silver:
+    - dataset
+    - game_date
+spark:
+  app_name: riot-lakehouse-prod
+  master: yarn
+  enable_delta: true
+riot:
+  platform: vn2
+  region: sea
+aws:
+  region: ap-southeast-1
+  glue_database: riot_lakehouse
