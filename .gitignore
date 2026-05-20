@@ -1,0 +1,22 @@
+raw/**/*.json
+
+# Local runtime/config
+.env
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Lakehouse outputs are reproducible
+data/lakehouse/**/*.parquet
+data/lakehouse/**/_delta_log/
+data/lakehouse/**/*.crc
+metadata/checkpoints/*.json
+reports/**/*.json
+reports/**/*.html
+
+# Spark/Airflow local noise
+spark-warehouse/
+metastore_db/
+derby.log
+logs/

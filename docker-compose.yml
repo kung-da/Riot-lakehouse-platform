@@ -1,0 +1,12 @@
+services:
+  lakehouse:
+    build: .
+    env_file:
+      - .env
+    volumes:
+      - ./raw:/app/raw:ro
+      - ./data:/app/data
+      - ./metadata:/app/metadata
+      - ./reports:/app/reports
+      - ./configs:/app/configs:ro
+    command: ["python", "-m", "lakehouse.jobs.run_full_pipeline", "--env", "dev"]

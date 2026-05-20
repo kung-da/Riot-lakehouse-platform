@@ -1,0 +1,33 @@
+from __future__ import annotations
+
+import json
+from dataclasses import dataclass, field
+from pathlib import Path
+
+
+@dataclass
+class FileCheckpoint:
+    dataset: str
+    processed_files: set[str] = field(default_factory=set)
+
+    @classmethod
+    def load(cls, checkpoint_root: Path, dataset: str) -> "FileCheckpoint":
+        path = checkpoint_root / f"{dataset}.json"
+        if not path.exists():
+            return cls(dataset=dataset)
+        with path.open("r", encoding="utf-8") as handle:
+            payload = json.load(handle)
+        return cls(dataset=dataset, processed_files=set(payload.get("processed_files", [])))
+
+    def save(self, checkpoint_root: Path) -> None:
+        checkpoint_root.mkdir(parents=True, exist_ok=True)
+        path = checkpoint_root / f"{self.dataset}.json"
+        payload = {"dataset": self.dataset, "processed_files": sorted(self.processed_files)}
+        with path.open("w", encoding="utf-8") as handle:
+            json.dump(payload, handle, indent=2)
+
+    def is_processed(self, file_path: Path) -> bool:
+        return str(file_path.as_posix()) in self.processed_files
+
+    def mark_processed(self, file_path: Path) -> None:
+        self.processed_files.add(str(file_path.as_posix()))
