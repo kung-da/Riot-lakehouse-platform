@@ -5,6 +5,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 
+def _checkpoint_key(file_path: Path | str) -> str:
+    if isinstance(file_path, Path):
+        return file_path.as_posix()
+    return str(file_path).replace("\\", "/")
+
+
 @dataclass
 class FileCheckpoint:
     dataset: str
@@ -26,8 +32,8 @@ class FileCheckpoint:
         with path.open("w", encoding="utf-8") as handle:
             json.dump(payload, handle, indent=2)
 
-    def is_processed(self, file_path: Path) -> bool:
-        return str(file_path.as_posix()) in self.processed_files
+    def is_processed(self, file_path: Path | str) -> bool:
+        return _checkpoint_key(file_path) in self.processed_files
 
-    def mark_processed(self, file_path: Path) -> None:
-        self.processed_files.add(str(file_path.as_posix()))
+    def mark_processed(self, file_path: Path | str) -> None:
+        self.processed_files.add(_checkpoint_key(file_path))

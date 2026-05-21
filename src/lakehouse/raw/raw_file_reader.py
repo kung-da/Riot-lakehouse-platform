@@ -5,7 +5,6 @@ import json
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
 
 from lakehouse.raw.detect_dataset import detect_dataset
 
@@ -16,16 +15,20 @@ class RawRecord:
     source_file: str
     file_hash: str
     ingest_ts: str
-    payload: dict[str, Any] | list[Any]
+    ingest_date: str
+    payload_json: str
 
 
-def read_raw_record(path: Path) -> RawRecord:
+def read_raw_record(path: Path, source_file: str | None = None) -> RawRecord:
     raw_bytes = path.read_bytes()
-    payload = json.loads(raw_bytes.decode("utf-8"))
+    payload_json = raw_bytes.decode("utf-8")
+    payload = json.loads(payload_json)
+    ingest_time = datetime.now(timezone.utc)
     return RawRecord(
         dataset=detect_dataset(path, payload),
-        source_file=path.as_posix(),
+        source_file=source_file or path.as_posix(),
         file_hash=hashlib.sha256(raw_bytes).hexdigest(),
-        ingest_ts=datetime.now(timezone.utc).isoformat(),
-        payload=payload,
+        ingest_ts=ingest_time.isoformat(),
+        ingest_date=ingest_time.date().isoformat(),
+        payload_json=payload_json,
     )
