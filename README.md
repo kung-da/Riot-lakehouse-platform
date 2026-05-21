@@ -35,15 +35,21 @@ By default, `configs/dev.yaml` ingests all datasets but caps `timelines` at 500 
 
 ```yaml
 bronze:
-  max_records_per_batch: 100
-  max_bytes_per_batch: 67108864
+  max_records_per_batch: 1000
+  max_bytes_per_batch: 134217728
   output_partitions: 1
   dataset_max_files:
     timelines: 500
   dataset_batch_sizes:
-    timelines: 5
+    matches: 1000
+    timelines: 25
+    summoners: 1000
+    ranked: 20
   dataset_max_bytes_per_batch:
-    timelines: 8388608
+    matches: 134217728
+    timelines: 67108864
+    summoners: 1048576
+    ranked: 33554432
 ```
 
 The configured timeline cap is enforced against the checkpoint count. If 5 timeline files are already checkpointed, the next default run ingests at most 495 more timeline files.
