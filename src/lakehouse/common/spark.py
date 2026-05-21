@@ -19,17 +19,21 @@ def get_spark(
         app_name = spark_config.get("app_name", app_name)
         master = spark_config.get("master", master)
         enable_delta = spark_config.get("enable_delta", enable_delta)
+    else:
+        spark_config = {}
 
     builder = (
         SparkSession.builder.appName(app_name)
         .master(master)
         .config("spark.sql.session.timeZone", "UTC")
         .config("spark.sql.parquet.compression.codec", "snappy")
-        .config("spark.sql.shuffle.partitions", "1")
-        .config("spark.default.parallelism", "1")
-        .config("spark.driver.memory", "2g")
+        .config("spark.sql.shuffle.partitions", str(spark_config.get("shuffle_partitions", 2)))
+        .config("spark.default.parallelism", str(spark_config.get("default_parallelism", 2)))
+        .config("spark.driver.memory", str(spark_config.get("driver_memory", "4g")))
         .config("spark.sql.parquet.enableVectorizedReader", "false")
     )
+    for key, value in spark_config.get("conf", {}).items():
+        builder = builder.config(str(key), str(value))
     if enable_delta:
         builder = (
             builder.config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
