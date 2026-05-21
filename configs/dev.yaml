@@ -25,7 +25,7 @@ bronze:
   max_bytes_per_batch: 134217728
   output_partitions: 1
   dataset_max_files:
-    timelines: 500
+    timelines: 5414
   dataset_batch_sizes:
     matches: 1000
     timelines: 25
