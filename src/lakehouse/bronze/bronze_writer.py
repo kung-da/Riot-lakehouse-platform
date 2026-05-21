@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 from typing import Any
 
@@ -23,16 +24,26 @@ def _spark_path(path: Path) -> str:
     return path.as_posix()
 
 
+def cleanup_temporary_output(output_path: Path) -> None:
+    temporary_path = output_path / "_temporary"
+    if temporary_path.exists():
+        shutil.rmtree(temporary_path)
+
+
 def write_parquet(
     spark: Any,
     records: list[dict[str, str]],
     output_path: Path,
     partition_columns: list[str],
+    output_partitions: int = 1,
 ) -> Path:
     if not records:
         return output_path
 
-    dataframe = spark.createDataFrame(records, schema=_bronze_schema())
+    if output_partitions < 1:
+        raise ValueError("output_partitions must be greater than zero")
+
+    dataframe = spark.createDataFrame(records, schema=_bronze_schema()).coalesce(output_partitions)
     (
         dataframe.write.mode("append")
         .option("compression", "snappy")

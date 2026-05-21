@@ -15,8 +15,15 @@ partition_columns:
     - game_date
 spark:
   app_name: riot-lakehouse-dev
-  master: local[*]
+  master: local[2]
   enable_delta: false
+bronze:
+  max_records_per_batch: 100
+  output_partitions: 1
+  dataset_max_files:
+    timelines: 500
+  dataset_batch_sizes:
+    timelines: 5
 riot:
   platform: vn2
   region: sea

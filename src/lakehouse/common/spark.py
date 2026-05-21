@@ -25,6 +25,10 @@ def get_spark(
         .master(master)
         .config("spark.sql.session.timeZone", "UTC")
         .config("spark.sql.parquet.compression.codec", "snappy")
+        .config("spark.sql.shuffle.partitions", "1")
+        .config("spark.default.parallelism", "1")
+        .config("spark.driver.memory", "2g")
+        .config("spark.sql.parquet.enableVectorizedReader", "false")
     )
     if enable_delta:
         builder = (
