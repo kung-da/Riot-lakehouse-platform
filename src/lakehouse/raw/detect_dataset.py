@@ -12,11 +12,20 @@ DATASET_BY_FOLDER = {
 }
 
 
-def detect_dataset(path: Path, payload: dict[str, Any] | list[Any]) -> str:
+def detect_dataset_from_path(path: Path) -> str | None:
     folder_name = path.parent.name.lower()
     if folder_name in DATASET_BY_FOLDER:
         return DATASET_BY_FOLDER[folder_name]
+    return None
 
+
+def detect_dataset(path: Path, payload: dict[str, Any] | list[Any] | None = None) -> str:
+    dataset = detect_dataset_from_path(path)
+    if dataset:
+        return dataset
+
+    if payload is None:
+        return "unknown"
     if isinstance(payload, dict):
         if {"metadata", "info"} <= payload.keys():
             info = payload.get("info", {})

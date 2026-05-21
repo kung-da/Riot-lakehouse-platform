@@ -36,19 +36,23 @@ By default, `configs/dev.yaml` ingests all datasets but caps `timelines` at 500 
 ```yaml
 bronze:
   max_records_per_batch: 100
+  max_bytes_per_batch: 67108864
   output_partitions: 1
   dataset_max_files:
     timelines: 500
   dataset_batch_sizes:
     timelines: 5
+  dataset_max_bytes_per_batch:
+    timelines: 8388608
 ```
 
 The configured timeline cap is enforced against the checkpoint count. If 5 timeline files are already checkpointed, the next default run ingests at most 495 more timeline files.
+When files live under a known raw dataset folder, Bronze does not parse JSON; it stores the original UTF-8 text plus metadata in Parquet.
 
 For an explicit large timeline backfill, override the default with CLI options:
 
 ```bash
-docker compose run --rm lakehouse python -m lakehouse.jobs.run_bronze --env dev --datasets timelines --max-files 100000 --batch-size 5
+docker compose run --rm lakehouse python -m lakehouse.jobs.run_bronze --env dev --datasets timelines --max-files 500 --batch-size 5
 ```
 
 Checkpoints are saved after each successful batch, so rerunning the same command resumes from the remaining unprocessed files.

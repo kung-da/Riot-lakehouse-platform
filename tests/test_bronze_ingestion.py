@@ -88,6 +88,25 @@ def test_bronze_record_batches_limit_new_files(tmp_path: Path):
     assert {record["dataset"] for record in records} == {"timelines"}
 
 
+def test_bronze_does_not_parse_json_when_dataset_folder_is_known(tmp_path: Path):
+    raw_match_dir = tmp_path / "raw" / "matches"
+    raw_match_dir.mkdir(parents=True)
+    raw_payload = "{not-valid-json-but-still-raw-bronze}"
+    (raw_match_dir / "VN2_invalid.json").write_text(raw_payload, encoding="utf-8")
+
+    batches = list(
+        iter_new_bronze_record_batches(
+            raw_root=tmp_path / "raw",
+            checkpoint_root=tmp_path / "metadata" / "checkpoints",
+            datasets=["matches"],
+        )
+    )
+
+    assert len(batches) == 1
+    assert batches[0].records[0]["dataset"] == "matches"
+    assert batches[0].records[0]["payload_json"] == raw_payload
+
+
 def test_bronze_record_batches_limit_only_configured_dataset(tmp_path: Path):
     for dataset in ["matches", "timelines"]:
         raw_dir = tmp_path / "raw" / dataset
@@ -143,3 +162,22 @@ def test_dataset_limit_respects_existing_checkpoint(tmp_path: Path):
     records = [record for batch in batches for record in batch.records]
     assert len(records) == 1
     assert records[0]["source_file"] == "raw/timelines/VN2_2.json"
+
+
+def test_bronze_record_batches_respect_byte_limit(tmp_path: Path):
+    raw_match_dir = tmp_path / "raw" / "matches"
+    raw_match_dir.mkdir(parents=True)
+    for index in range(3):
+        (raw_match_dir / f"VN2_{index}.json").write_text("x" * 8, encoding="utf-8")
+
+    batches = list(
+        iter_new_bronze_record_batches(
+            raw_root=tmp_path / "raw",
+            checkpoint_root=tmp_path / "metadata" / "checkpoints",
+            datasets=["matches"],
+            max_records_per_batch=10,
+            max_bytes_per_batch=10,
+        )
+    )
+
+    assert [len(batch) for batch in batches] == [1, 1, 1]
