@@ -19,11 +19,14 @@ spark:
   enable_delta: false
 bronze:
   max_records_per_batch: 100
+  max_bytes_per_batch: 67108864
   output_partitions: 1
   dataset_max_files:
     timelines: 500
   dataset_batch_sizes:
     timelines: 5
+  dataset_max_bytes_per_batch:
+    timelines: 8388608
 riot:
   platform: vn2
   region: sea

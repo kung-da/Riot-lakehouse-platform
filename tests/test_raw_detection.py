@@ -1,6 +1,11 @@
 from pathlib import Path
 
-from lakehouse.raw.detect_dataset import detect_dataset
+from lakehouse.raw.detect_dataset import detect_dataset, detect_dataset_from_path
+
+
+def test_detect_dataset_from_known_folder_without_payload():
+    assert detect_dataset_from_path(Path("raw/matches/VN2_1.json")) == "matches"
+    assert detect_dataset(Path("raw/timelines/VN2_1.json")) == "timelines"
 
 
 def test_detect_match_payload():
