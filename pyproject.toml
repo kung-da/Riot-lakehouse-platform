@@ -16,7 +16,6 @@ dependencies = [
 [project.optional-dependencies]
 spark = [
   "pyspark>=3.5",
-  "delta-spark>=3.2",
 ]
 aws = [
   "boto3>=1.34",

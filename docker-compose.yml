@@ -4,9 +4,11 @@ services:
     env_file:
       - .env
     volumes:
-      - ./raw:/app/raw:ro
+      - ./raw:/app/raw
       - ./data:/app/data
       - ./metadata:/app/metadata
       - ./reports:/app/reports
-      - ./configs:/app/configs:ro
-    command: ["python", "-m", "lakehouse.jobs.run_full_pipeline", "--env", "dev"]
+      - ./configs:/app/configs
+      - ./src:/app/src
+      - ./tests:/app/tests
+    command: ["python", "-m", "lakehouse.jobs.run_bronze", "--env", "dev"]

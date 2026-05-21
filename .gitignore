@@ -8,12 +8,9 @@ __pycache__/
 .pytest_cache/
 
 # Lakehouse outputs are reproducible
-data/lakehouse/**/*.parquet
-data/lakehouse/**/_delta_log/
-data/lakehouse/**/*.crc
-metadata/checkpoints/*.json
-reports/**/*.json
-reports/**/*.html
+data/lakehouse/
+metadata/checkpoints/
+reports/
 
 # Spark/Airflow local noise
 spark-warehouse/
