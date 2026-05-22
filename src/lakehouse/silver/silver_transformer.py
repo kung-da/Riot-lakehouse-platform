@@ -283,7 +283,10 @@ def derive_game_date_from_ms(timestamp_ms: Any) -> str | None:
     if timestamp_ms is None:
         return None
     try:
-        return datetime.fromtimestamp(int(timestamp_ms) / 1000, tz=timezone.utc).date().isoformat()
+        timestamp = int(timestamp_ms)
+        if timestamp <= 0:
+            return None
+        return datetime.fromtimestamp(timestamp / 1000, tz=timezone.utc).date().isoformat()
     except (OSError, OverflowError, TypeError, ValueError):
         return None
 

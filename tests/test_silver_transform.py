@@ -173,6 +173,23 @@ def test_timeline_events_use_event_column_names():
     assert "timestamp" not in row
 
 
+def test_zero_match_timestamps_fall_back_to_ingest_date():
+    payload = _match_payload()
+    payload["info"]["gameCreation"] = 0
+    payload["info"]["gameStartTimestamp"] = 0
+    record = {
+        "dataset": "matches",
+        "source_file": "raw/matches/VN2_1.json",
+        "file_hash": "abc123",
+        "ingest_ts": "2026-05-22T00:00:00Z",
+        "ingest_date": "2026-05-22",
+        "payload_json": json.dumps(payload),
+    }
+
+    assert derive_game_date_from_ms(0) is None
+    assert transform_bronze_record(record)["matches"][0]["game_date"] == "2026-05-22"
+
+
 def test_transform_bronze_record_enriches_lineage_metadata():
     record = {
         "dataset": "matches",
