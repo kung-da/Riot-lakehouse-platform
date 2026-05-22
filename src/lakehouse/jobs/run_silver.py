@@ -37,7 +37,9 @@ def main() -> None:
         tables=_split_csv(args.tables),
         write_mode=args.write_mode,
     )
-    print(f"Silver transform completed: {counts}")
+    print("Silver transform completed:")
+    for table, count in counts.items():
+        print(f"{table}: {count}")
 
 
 if __name__ == "__main__":

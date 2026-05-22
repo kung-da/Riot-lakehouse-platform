@@ -67,9 +67,27 @@ Run Silver after Bronze to materialize cleaned domain tables:
 
 ```bash
 docker compose run --rm lakehouse python -m lakehouse.jobs.run_silver --env dev
+docker compose run --rm lakehouse python -m lakehouse.jobs.run_silver --env dev --datasets matches,timelines
+docker compose run --rm lakehouse python -m lakehouse.jobs.run_silver --env dev --tables matches,participants,teams
 ```
 
-Silver reads `data/lakehouse/bronze/raw_json`, parses valid Riot payloads, and overwrites the cleaned Parquet tables under `data/lakehouse/silver/{matches,participants,teams,summoners,ranked,timeline_frames,timeline_events}`.
+When running from an installed local environment instead of Docker:
+
+```bash
+python -m lakehouse.jobs.run_silver --env dev
+python -m lakehouse.jobs.run_silver --env dev --datasets matches,timelines
+python -m lakehouse.jobs.run_silver --env dev --tables matches,participants,teams
+```
+
+Silver reads `data/lakehouse/bronze/raw_json`, parses valid Riot payloads, keeps Bronze lineage columns (`source_file`, `file_hash`, `ingest_ts`, `ingest_date`, `dataset`), derives `game_date`, and overwrites the cleaned Parquet tables under `data/lakehouse/silver/{matches,participants,teams,summoners,ranked,timeline_frames,timeline_events}`. Silver is partitioned by `dataset` and `game_date`, for example `data/lakehouse/silver/matches/dataset=matches/game_date=YYYY-MM-DD/*.parquet`.
+
+Quick DuckDB check:
+
+```sql
+SELECT dataset, game_date, COUNT(*)
+FROM read_parquet('data/lakehouse/silver/matches/**/*.parquet')
+GROUP BY dataset, game_date;
+```
 
 ## Layers
 
@@ -79,6 +97,8 @@ Silver reads `data/lakehouse/bronze/raw_json`, parses valid Riot payloads, and o
 - Platinum: ML-ready feature tables for match win, player performance, and champion meta modeling.
 
 Current work has runnable Bronze and Silver layers. Gold and Platinum scaffolds remain available for later stages.
+
+TODO: Silver and Gold can be migrated from Parquet to Delta Lake in a later version.
 
 ## Configuration
 
