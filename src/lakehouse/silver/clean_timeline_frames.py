@@ -4,16 +4,20 @@ from typing import Any
 
 
 def clean_timeline_frames(payload: dict[str, Any]) -> list[dict[str, Any]]:
-    match_id = payload.get("metadata", {}).get("matchId")
+    match_id = (payload.get("metadata") or {}).get("matchId")
+    frames = (payload.get("info") or {}).get("frames") or []
     rows = []
-    for index, frame in enumerate(payload.get("info", {}).get("frames", [])):
+    for index, frame in enumerate(frames):
+        frame = frame or {}
+        participant_frames = frame.get("participantFrames") or {}
+        events = frame.get("events") or []
         rows.append(
             {
                 "match_id": match_id,
                 "frame_index": index,
-                "timestamp": frame.get("timestamp"),
-                "participant_frame_count": len(frame.get("participantFrames", {})),
-                "event_count": len(frame.get("events", [])),
+                "frame_timestamp": frame.get("timestamp"),
+                "participant_frame_count": len(participant_frames),
+                "event_count": len(events),
             }
         )
     return rows

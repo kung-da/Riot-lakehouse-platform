@@ -4,8 +4,9 @@ from typing import Any
 
 
 def clean_match(payload: dict[str, Any]) -> dict[str, Any]:
-    info = payload.get("info", {})
-    metadata = payload.get("metadata", {})
+    info = payload.get("info") or {}
+    metadata = payload.get("metadata") or {}
+    participants = info.get("participants") or []
     return {
         "match_id": metadata.get("matchId"),
         "game_id": info.get("gameId"),
@@ -18,5 +19,5 @@ def clean_match(payload: dict[str, Any]) -> dict[str, Any]:
         "game_start_timestamp": info.get("gameStartTimestamp"),
         "game_end_timestamp": info.get("gameEndTimestamp"),
         "game_duration": info.get("gameDuration"),
-        "participant_count": len(info.get("participants", [])),
+        "participant_count": len(participants),
     }

@@ -8,7 +8,7 @@ silver:
     primary_key: match_id
   participants:
     path: silver/participants
-    primary_key: [match_id, puuid]
+    primary_key: [match_id, participant_id]
   teams:
     path: silver/teams
     primary_key: [match_id, team_id]
@@ -17,7 +17,7 @@ silver:
     primary_key: puuid
   ranked:
     path: silver/ranked
-    primary_key: [puuid, queue, tier, rank]
+    primary_key: [league_id, summoner_id, puuid, queue, tier, rank]
   timeline_frames:
     path: silver/timeline_frames
     primary_key: [match_id, frame_index]
