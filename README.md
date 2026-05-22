@@ -63,6 +63,14 @@ docker compose run --rm lakehouse python -m lakehouse.jobs.run_bronze --env dev 
 
 Checkpoints are saved after each successful batch, so rerunning the same command resumes from the remaining unprocessed files.
 
+Run Silver after Bronze to materialize cleaned domain tables:
+
+```bash
+docker compose run --rm lakehouse python -m lakehouse.jobs.run_silver --env dev
+```
+
+Silver reads `data/lakehouse/bronze/raw_json`, parses valid Riot payloads, and overwrites the cleaned Parquet tables under `data/lakehouse/silver/{matches,participants,teams,summoners,ranked,timeline_frames,timeline_events}`.
+
 ## Layers
 
 - Bronze: append-only Parquet ingestion from raw JSON with dataset, file path, file hash, ingestion timestamp, ingestion date, and original JSON payload string.
@@ -70,7 +78,7 @@ Checkpoints are saved after each successful batch, so rerunning the same command
 - Gold: analytics aggregates for players, champions, roles, ranks, and team objectives.
 - Platinum: ML-ready feature tables for match win, player performance, and champion meta modeling.
 
-Current work focuses on Bronze only. Silver, Gold, and Platinum scaffolds remain available for later stages.
+Current work has runnable Bronze and Silver layers. Gold and Platinum scaffolds remain available for later stages.
 
 ## Configuration
 

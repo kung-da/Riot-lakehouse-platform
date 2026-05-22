@@ -1,6 +1,7 @@
 from lakehouse.bronze.bronze_ingestion import run_bronze_ingestion
 from lakehouse.common.paths import ensure_directories
 from lakehouse.jobs._cli import load_job_config
+from lakehouse.silver.silver_transformer import run_silver_transform
 
 
 def main() -> None:
@@ -16,7 +17,12 @@ def main() -> None:
         ]
     )
     bronze_count = run_bronze_ingestion(config)
-    print(f"Full pipeline scaffold completed. Bronze ingested {bronze_count} new raw files.")
+    silver_counts = run_silver_transform(config)
+    print(
+        "Full pipeline completed. "
+        f"Bronze ingested {bronze_count} new raw files. "
+        f"Silver rows: {silver_counts}"
+    )
 
 
 if __name__ == "__main__":
