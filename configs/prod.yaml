@@ -17,6 +17,9 @@ spark:
   app_name: riot-lakehouse-prod
   master: yarn
   enable_delta: true
+silver:
+  write_mode: overwrite
+  output_partitions: 8
 riot:
   platform: vn2
   region: sea

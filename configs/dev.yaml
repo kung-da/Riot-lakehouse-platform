@@ -36,6 +36,9 @@ bronze:
     timelines: 67108864
     summoners: 1048576
     ranked: 33554432
+silver:
+  write_mode: overwrite
+  output_partitions: 1
 riot:
   platform: vn2
   region: sea
