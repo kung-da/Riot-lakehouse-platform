@@ -7,6 +7,8 @@ from lakehouse.gold.schemas import GOLD_COLUMNS
 
 GoldAggregation = Callable[[dict[str, Any]], Any]
 
+ROLE_BUCKETS = ("TOP", "JUNGLE", "MIDDLE", "BOTTOM", "UTILITY")
+
 GOLD_TABLE_SOURCES = {
     "player_metrics": ["participants"],
     "champion_metrics": ["participants"],
@@ -40,9 +42,21 @@ def _cs_column() -> Any:
     ).cast("long")
 
 
-def _valid_text(column: str) -> Any:
+def _role_bucket(column: str) -> Any:
     F = _functions()
-    return F.when(F.length(F.trim(F.col(column))) > 0, F.col(column))
+    normalized = F.upper(F.trim(F.col(column)))
+    return F.when(normalized.isin(*ROLE_BUCKETS), normalized)
+
+
+def _normalized_role() -> Any:
+    F = _functions()
+    return F.coalesce(
+        _role_bucket("team_position"),
+        _role_bucket("individual_position"),
+        _role_bucket("lane"),
+        _role_bucket("role"),
+        F.lit("UNKNOWN"),
+    )
 
 
 def _add_loss_and_win_rate(dataframe: Any, count_column: str) -> Any:
@@ -137,16 +151,9 @@ def build_champion_metrics(silver_tables: dict[str, Any]) -> Any:
 
 
 def build_role_metrics(silver_tables: dict[str, Any]) -> Any:
-    F = _functions()
     participants = silver_tables["participants"].withColumn(
         "team_position",
-        F.coalesce(
-            _valid_text("team_position"),
-            _valid_text("individual_position"),
-            _valid_text("lane"),
-            _valid_text("role"),
-            F.lit("UNKNOWN"),
-        ),
+        _normalized_role(),
     ).withColumn("_cs", _cs_column())
     aggregated = _participant_metrics(
         participants,

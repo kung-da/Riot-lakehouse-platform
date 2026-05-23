@@ -44,6 +44,11 @@ silver:
 gold:
   write_mode: overwrite
   output_partitions: 1
+quality:
+  layers:
+    - silver
+    - gold
+  output_dir: data_quality
 riot:
   platform: vn2
   region: sea

@@ -8,7 +8,7 @@ import pytest
 
 from lakehouse.common.config import LakehouseConfig
 from lakehouse.common.spark import get_spark
-from lakehouse.gold.aggregations import build_player_metrics
+from lakehouse.gold.aggregations import build_player_metrics, build_role_metrics
 from lakehouse.gold.gold_transformer import GOLD_TABLES, _selected_tables, run_gold_transform
 
 
@@ -254,6 +254,36 @@ def test_player_metrics_aggregation_logic(tmp_path: Path):
     assert math.isclose(metrics["p1"]["win_rate"], 0.5)
     assert math.isclose(metrics["p1"]["avg_kills"], 4.0)
     assert math.isclose(metrics["p1"]["avg_cs"], 172.0)
+
+
+def test_role_metrics_normalizes_invalid_role_values(tmp_path: Path):
+    pytest.importorskip("pyspark")
+
+    invalid_role_row = {
+        **_participant_rows()[0],
+        "match_id": "VN2_3",
+        "puuid": "p3",
+        "summoner_id": "s3",
+        "team_position": "",
+        "individual_position": "Invalid",
+        "lane": "NONE",
+        "role": "NONE",
+    }
+    config = _config(tmp_path)
+    spark = get_spark(config=config)
+    try:
+        participants = spark.createDataFrame([_participant_rows()[0], invalid_role_row])
+        roles = {
+            row["team_position"]: row.asDict()
+            for row in build_role_metrics({"participants": participants}).collect()
+        }
+    finally:
+        spark.stop()
+
+    assert "MIDDLE" in roles
+    assert "UNKNOWN" in roles
+    assert "Invalid" not in roles
+    assert "NONE" not in roles
 
 
 def test_run_gold_help():

@@ -90,6 +90,15 @@ docker compose run --rm lakehouse python -m lakehouse.jobs.run_gold --env dev --
 
 Gold reads Silver Parquet and overwrites `data/lakehouse/gold/{player_metrics,champion_metrics,role_metrics,rank_metrics,team_objective_metrics}`. Gold v1 is partitioned by `game_date` for all five tables.
 
+Run Data Quality after Gold to profile and validate Silver/Gold tables:
+
+```bash
+docker compose run --rm lakehouse python -m lakehouse.jobs.run_data_quality --env dev
+docker compose run --rm lakehouse python -m lakehouse.jobs.run_data_quality --env dev --layers gold --gold-tables player_metrics,champion_metrics
+```
+
+The job writes JSON and Markdown reports under `reports/data_quality/`, including `data_quality_latest.json` and `data_quality_latest.md`. It checks table existence, row counts, expected columns, required values, uniqueness, non-negative metrics, win-rate ranges, and basic aggregate consistency without calling any AI API.
+
 Quick DuckDB check:
 
 ```sql
