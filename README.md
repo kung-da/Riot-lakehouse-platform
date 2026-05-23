@@ -81,6 +81,15 @@ python -m lakehouse.jobs.run_silver --env dev --tables matches,participants,team
 
 Silver reads `data/lakehouse/bronze/raw_json`, parses valid Riot payloads, keeps Bronze lineage columns (`source_file`, `file_hash`, `ingest_ts`, `ingest_date`, `dataset`), derives `game_date`, and overwrites the cleaned Parquet tables under `data/lakehouse/silver/{matches,participants,teams,summoners,ranked,timeline_frames,timeline_events}`. Silver is partitioned by `dataset` and `game_date`, for example `data/lakehouse/silver/matches/dataset=matches/game_date=YYYY-MM-DD/*.parquet`.
 
+Run Gold after Silver to build dashboard-friendly aggregate tables:
+
+```bash
+docker compose run --rm lakehouse python -m lakehouse.jobs.run_gold --env dev
+docker compose run --rm lakehouse python -m lakehouse.jobs.run_gold --env dev --tables player_metrics,champion_metrics
+```
+
+Gold reads Silver Parquet and overwrites `data/lakehouse/gold/{player_metrics,champion_metrics,role_metrics,rank_metrics,team_objective_metrics}`. Gold v1 is partitioned by `game_date` for all five tables.
+
 Quick DuckDB check:
 
 ```sql
@@ -93,10 +102,10 @@ GROUP BY dataset, game_date;
 
 - Bronze: append-only Parquet ingestion from raw JSON with dataset, file path, file hash, ingestion timestamp, ingestion date, and original JSON payload string.
 - Silver: cleaned domain tables for matches, participants, teams, summoners, ranked, timeline frames, and timeline events.
-- Gold: analytics aggregates for players, champions, roles, ranks, and team objectives.
+- Gold: analytics aggregates for players, champions, roles, ranks, and team objectives, written as Parquet from Silver.
 - Platinum: ML-ready feature tables for match win, player performance, and champion meta modeling.
 
-Current work has runnable Bronze and Silver layers. Gold and Platinum scaffolds remain available for later stages.
+Current work has runnable Bronze, Silver, and Gold layers. Platinum scaffolds remain available for later stages.
 
 TODO: Silver and Gold can be migrated from Parquet to Delta Lake in a later version.
 

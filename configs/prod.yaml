@@ -13,11 +13,16 @@ partition_columns:
   silver:
     - dataset
     - game_date
+  gold:
+    - game_date
 spark:
   app_name: riot-lakehouse-prod
   master: yarn
   enable_delta: true
 silver:
+  write_mode: overwrite
+  output_partitions: 8
+gold:
   write_mode: overwrite
   output_partitions: 8
 riot:

@@ -31,6 +31,7 @@ def get_spark(
         .config("spark.default.parallelism", str(spark_config.get("default_parallelism", 2)))
         .config("spark.driver.memory", str(spark_config.get("driver_memory", "4g")))
         .config("spark.sql.parquet.enableVectorizedReader", "false")
+        .config("spark.sql.sources.partitionColumnTypeInference.enabled", "false")
     )
     for key, value in spark_config.get("conf", {}).items():
         builder = builder.config(str(key), str(value))

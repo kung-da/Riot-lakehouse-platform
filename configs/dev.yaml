@@ -13,6 +13,8 @@ partition_columns:
   silver:
     - dataset
     - game_date
+  gold:
+    - game_date
 spark:
   app_name: riot-lakehouse-dev
   master: local[4]
@@ -37,6 +39,9 @@ bronze:
     summoners: 1048576
     ranked: 33554432
 silver:
+  write_mode: overwrite
+  output_partitions: 1
+gold:
   write_mode: overwrite
   output_partitions: 1
 riot:
