@@ -151,6 +151,8 @@ def _compact_detail(details: dict[str, Any]) -> str:
         "missing_columns",
         "key_columns",
         "accepted_values",
+        "invalid_rate",
+        "top_invalid_values",
         "row_count",
         "min_count",
         "target",
