@@ -143,6 +143,28 @@ def test_transform_match_payload_to_silver_tables():
     assert result["teams"][0]["champion_kills"] == 25
 
 
+def test_transform_match_payload_filters_invalid_team_ids():
+    payload = _match_payload()
+    payload["info"]["teams"].append(
+        {
+            "teamId": 0,
+            "win": False,
+            "objectives": {
+                "baron": {"kills": 0},
+                "champion": {"kills": 0},
+                "dragon": {"kills": 0},
+                "riftHerald": {"kills": 0},
+                "tower": {"kills": 0},
+                "inhibitor": {"kills": 0},
+            },
+        }
+    )
+
+    rows = transform_payload("matches", payload)["teams"]
+
+    assert [row["team_id"] for row in rows] == [100]
+
+
 def test_ranked_mapping_keeps_summoner_id_and_optional_puuid():
     payload = {
         "leagueId": "league-1",
