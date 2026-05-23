@@ -10,6 +10,7 @@ from lakehouse.common.config import LakehouseConfig
 from lakehouse.common.spark import get_spark
 from lakehouse.gold.schemas import gold_schema
 from lakehouse.quality.data_quality import run_data_quality
+from lakehouse.quality.report_writer import render_markdown_report
 from lakehouse.quality.rules import evaluate_rules, rules_for_table
 
 
@@ -201,3 +202,50 @@ def test_accepted_value_warnings_include_top_invalid_values(tmp_path: Path):
         "value": 0,
         "row_count": 2,
     }
+
+
+def test_markdown_issue_details_include_invalid_value_profile():
+    report = {
+        "run_id": "test",
+        "generated_at": "2026-05-23T00:00:00Z",
+        "environment": "test",
+        "status": "READY_WITH_WARNINGS",
+        "summary": {
+            "ready_for_dashboard": True,
+            "tables_expected": 1,
+            "tables_analyzed": 1,
+            "missing_tables": 0,
+            "passed_tables": 0,
+            "warning_tables": 1,
+            "failed_tables": 0,
+        },
+        "tables": [
+            {
+                "layer": "silver",
+                "table": "teams",
+                "status": "WARN",
+                "row_count": 4,
+                "profile": {"row_count": 4, "column_count": 15},
+                "checks": [
+                    {
+                        "name": "team_id_known_values",
+                        "status": "WARN",
+                        "failed_rows": 3,
+                        "details": {
+                            "accepted_values": [100, 200],
+                            "invalid_rate": 0.75,
+                            "top_invalid_values": [
+                                {"column": "team_id", "value": 0, "row_count": 2}
+                            ],
+                        },
+                    }
+                ],
+            }
+        ],
+    }
+
+    markdown = render_markdown_report(report)
+
+    assert "invalid_rate" in markdown
+    assert "top_invalid_values" in markdown
+    assert '"value": 0' in markdown
