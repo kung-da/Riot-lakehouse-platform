@@ -37,11 +37,22 @@ SILVER_KEYS = {
 }
 
 GOLD_KEYS = {
-    "player_metrics": ("game_date", "puuid"),
-    "champion_metrics": ("game_date", "champion_id"),
-    "role_metrics": ("game_date", "team_position"),
-    "rank_metrics": ("game_date", "queue", "tier", "rank"),
-    "team_objective_metrics": ("game_date", "team_id"),
+    "dim_date": ("game_date",),
+    "dim_match": ("match_id",),
+    "dim_summoner": ("puuid",),
+    "dim_champion": ("champion_id",),
+    "dim_team": ("team_id",),
+    "dim_rank": ("queue", "tier", "rank"),
+    "fact_participant_performance": ("match_id", "participant_id"),
+    "fact_team_objectives": ("match_id", "team_id"),
+    "fact_rank_snapshot": ("game_date", "queue", "tier", "rank", "puuid"),
+    "fact_timeline_frames": ("match_id", "frame_index"),
+    "fact_timeline_events": ("match_id", "frame_index", "event_index"),
+    "mart_player_daily_performance": ("game_date", "puuid"),
+    "mart_champion_daily_performance": ("game_date", "champion_id"),
+    "mart_role_daily_performance": ("game_date", "team_position"),
+    "mart_rank_daily_summary": ("game_date", "queue", "tier", "rank"),
+    "mart_team_objective_daily_summary": ("game_date", "team_id"),
 }
 
 SILVER_REQUIRED = {
@@ -69,8 +80,38 @@ SILVER_REQUIRED = {
 }
 
 GOLD_REQUIRED = {
-    "player_metrics": ("game_date", "puuid", "matches_played", "wins", "losses", "win_rate"),
-    "champion_metrics": (
+    "dim_date": ("date_key", "game_date"),
+    "dim_match": ("match_id", "game_date"),
+    "dim_summoner": ("puuid",),
+    "dim_champion": ("champion_id", "champion_name"),
+    "dim_team": ("team_id", "team_side"),
+    "dim_rank": ("queue", "tier", "rank"),
+    "fact_participant_performance": (
+        "game_date",
+        "match_id",
+        "participant_id",
+        "puuid",
+        "champion_id",
+    ),
+    "fact_team_objectives": ("game_date", "match_id", "team_id"),
+    "fact_rank_snapshot": ("game_date", "queue", "tier", "rank", "puuid"),
+    "fact_timeline_frames": ("game_date", "match_id", "frame_index"),
+    "fact_timeline_events": (
+        "game_date",
+        "match_id",
+        "frame_index",
+        "event_index",
+        "event_type",
+    ),
+    "mart_player_daily_performance": (
+        "game_date",
+        "puuid",
+        "matches_played",
+        "wins",
+        "losses",
+        "win_rate",
+    ),
+    "mart_champion_daily_performance": (
         "game_date",
         "champion_id",
         "champion_name",
@@ -79,7 +120,7 @@ GOLD_REQUIRED = {
         "losses",
         "win_rate",
     ),
-    "role_metrics": (
+    "mart_role_daily_performance": (
         "game_date",
         "team_position",
         "matches_played",
@@ -87,11 +128,14 @@ GOLD_REQUIRED = {
         "losses",
         "win_rate",
     ),
-    "rank_metrics": ("game_date", "queue", "tier", "rank", "players", "avg_win_rate"),
-    "team_objective_metrics": (
+    "mart_rank_daily_summary": ("game_date", "queue", "tier", "rank", "players", "avg_win_rate"),
+    "mart_team_objective_daily_summary": (
         "game_date",
+        "team_id",
         "games_played",
         "wins",
+        "losses",
+        "win_rate",
         "avg_baron_kills",
         "avg_dragon_kills",
         "avg_rift_herald_kills",
@@ -156,22 +200,28 @@ GOLD_NON_NEGATIVE = {
         if column in LONG_COLUMNS or column in DOUBLE_COLUMNS
     )
     for table in GOLD_TABLES
-    if table != "team_objective_metrics"
 }
 
 RATE_COLUMNS = {
     "silver": {"ranked": ("win_rate",)},
     "gold": {
-        "player_metrics": ("win_rate",),
-        "champion_metrics": ("win_rate",),
-        "role_metrics": ("win_rate",),
-        "rank_metrics": ("avg_win_rate",),
+        "fact_rank_snapshot": ("win_rate",),
+        "mart_player_daily_performance": ("win_rate",),
+        "mart_champion_daily_performance": ("win_rate",),
+        "mart_role_daily_performance": ("win_rate",),
+        "mart_rank_daily_summary": ("avg_win_rate",),
+        "mart_team_objective_daily_summary": ("win_rate",),
     },
 }
 
 TEAM_ID_TABLES = {
     "silver": {"participants": ("team_id",), "teams": ("team_id",)},
-    "gold": {},
+    "gold": {
+        "dim_team": ("team_id",),
+        "fact_participant_performance": ("team_id",),
+        "fact_team_objectives": ("team_id",),
+        "mart_team_objective_daily_summary": ("team_id",),
+    },
 }
 
 ROLE_VALUES = ("TOP", "JUNGLE", "MIDDLE", "BOTTOM", "UTILITY", "UNKNOWN")
@@ -325,7 +375,7 @@ def rules_for_table(layer: str, table: str) -> list[RuleSpec]:
                 columns=non_negative,
             )
         )
-    if layer == "gold" and table == "team_objective_metrics":
+    if layer == "gold" and table == "mart_team_objective_daily_summary":
         rules.extend(
             [
                 RuleSpec(
@@ -335,7 +385,7 @@ def rules_for_table(layer: str, table: str) -> list[RuleSpec]:
                     params={"metrics": TEAM_OBJECTIVE_POSITIVE_METRICS},
                 ),
                 RuleSpec(
-                    name="team_objective_metrics_non_negative",
+                    name="team_objective_summary_non_negative",
                     rule_type="non_negative_metric_candidates",
                     description="Team objective metrics are non-negative when present",
                     params={"metrics": TEAM_OBJECTIVE_NON_NEGATIVE_METRICS},
@@ -355,7 +405,11 @@ def rules_for_table(layer: str, table: str) -> list[RuleSpec]:
             )
         )
 
-    if table in {"player_metrics", "champion_metrics", "role_metrics"}:
+    if table in {
+        "mart_player_daily_performance",
+        "mart_champion_daily_performance",
+        "mart_role_daily_performance",
+    }:
         rules.append(
             RuleSpec(
                 name="wins_losses_match_games",
@@ -364,7 +418,7 @@ def rules_for_table(layer: str, table: str) -> list[RuleSpec]:
                 params={"addends": ("wins", "losses"), "target": "matches_played"},
             )
         )
-    if table == "team_objective_metrics":
+    if table == "mart_team_objective_daily_summary":
         rules.append(
             RuleSpec(
                 name="wins_losses_match_games",
@@ -387,7 +441,10 @@ def rules_for_table(layer: str, table: str) -> list[RuleSpec]:
             )
         )
 
-    if layer == "gold" and table == "role_metrics":
+    if layer == "gold" and table in {
+        "fact_participant_performance",
+        "mart_role_daily_performance",
+    }:
         rules.append(
             RuleSpec(
                 name="role_known_values",
@@ -399,7 +456,7 @@ def rules_for_table(layer: str, table: str) -> list[RuleSpec]:
             )
         )
 
-    if table == "rank_metrics":
+    if table in {"dim_rank", "fact_rank_snapshot", "mart_rank_daily_summary"}:
         rules.append(
             RuleSpec(
                 name="tier_known_values",
