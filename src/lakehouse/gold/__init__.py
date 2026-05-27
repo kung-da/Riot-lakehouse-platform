@@ -1,1 +1,1 @@
-"""Gold aggregation layer."""
+"""Gold dimensional model and analytics marts."""

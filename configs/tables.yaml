@@ -25,16 +25,54 @@ silver:
     path: silver/timeline_events
     primary_key: [match_id, frame_index, event_index]
 gold:
-  player_metrics:
-    path: gold/player_metrics
-  champion_metrics:
-    path: gold/champion_metrics
-  role_metrics:
-    path: gold/role_metrics
-  rank_metrics:
-    path: gold/rank_metrics
-  team_objective_metrics:
-    path: gold/team_objective_metrics
+  dim_date:
+    path: gold/dim_date
+    primary_key: game_date
+  dim_match:
+    path: gold/dim_match
+    primary_key: match_id
+  dim_summoner:
+    path: gold/dim_summoner
+    primary_key: puuid
+  dim_champion:
+    path: gold/dim_champion
+    primary_key: champion_id
+  dim_team:
+    path: gold/dim_team
+    primary_key: team_id
+  dim_rank:
+    path: gold/dim_rank
+    primary_key: [queue, tier, rank]
+  fact_participant_performance:
+    path: gold/fact_participant_performance
+    primary_key: [match_id, participant_id]
+  fact_team_objectives:
+    path: gold/fact_team_objectives
+    primary_key: [match_id, team_id]
+  fact_rank_snapshot:
+    path: gold/fact_rank_snapshot
+    primary_key: [game_date, queue, tier, rank, puuid]
+  fact_timeline_frames:
+    path: gold/fact_timeline_frames
+    primary_key: [match_id, frame_index]
+  fact_timeline_events:
+    path: gold/fact_timeline_events
+    primary_key: [match_id, frame_index, event_index]
+  mart_player_daily_performance:
+    path: gold/mart_player_daily_performance
+    primary_key: [game_date, puuid]
+  mart_champion_daily_performance:
+    path: gold/mart_champion_daily_performance
+    primary_key: [game_date, champion_id]
+  mart_role_daily_performance:
+    path: gold/mart_role_daily_performance
+    primary_key: [game_date, team_position]
+  mart_rank_daily_summary:
+    path: gold/mart_rank_daily_summary
+    primary_key: [game_date, queue, tier, rank]
+  mart_team_objective_daily_summary:
+    path: gold/mart_team_objective_daily_summary
+    primary_key: [game_date, team_id]
 platinum:
   match_win_features:
     path: platinum/match_win_features

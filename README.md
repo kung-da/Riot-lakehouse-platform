@@ -81,20 +81,26 @@ python -m lakehouse.jobs.run_silver --env dev --tables matches,participants,team
 
 Silver reads `data/lakehouse/bronze/raw_json`, parses valid Riot payloads, keeps Bronze lineage columns (`source_file`, `file_hash`, `ingest_ts`, `ingest_date`, `dataset`), derives `game_date`, and overwrites the cleaned Parquet tables under `data/lakehouse/silver/{matches,participants,teams,summoners,ranked,timeline_frames,timeline_events}`. Silver is partitioned by `dataset` and `game_date`, for example `data/lakehouse/silver/matches/dataset=matches/game_date=YYYY-MM-DD/*.parquet`.
 
-Run Gold after Silver to build dashboard-friendly aggregate tables:
+Run Gold after Silver to build the dimensional analytics model:
 
 ```bash
 docker compose run --rm lakehouse python -m lakehouse.jobs.run_gold --env dev
-docker compose run --rm lakehouse python -m lakehouse.jobs.run_gold --env dev --tables player_metrics,champion_metrics
+docker compose run --rm lakehouse python -m lakehouse.jobs.run_gold --env dev --tables dim_summoner,mart_player_daily_performance
 ```
 
-Gold reads Silver Parquet and overwrites `data/lakehouse/gold/{player_metrics,champion_metrics,role_metrics,rank_metrics,team_objective_metrics}`. Gold v1 is partitioned by `game_date` for all five tables.
+Gold reads Silver Parquet and overwrites dimension, fact, and mart tables under `data/lakehouse/gold/`:
+
+- Dimensions: `dim_date`, `dim_match`, `dim_summoner`, `dim_champion`, `dim_team`, `dim_rank`
+- Facts: `fact_participant_performance`, `fact_team_objectives`, `fact_rank_snapshot`, `fact_timeline_frames`, `fact_timeline_events`
+- Analytics marts: `mart_player_daily_performance`, `mart_champion_daily_performance`, `mart_role_daily_performance`, `mart_rank_daily_summary`, `mart_team_objective_daily_summary`
+
+Gold tables are partitioned by `game_date` when that column exists.
 
 Run Data Quality after Gold to profile and validate Silver/Gold tables:
 
 ```bash
 docker compose run --rm lakehouse python -m lakehouse.jobs.run_data_quality --env dev
-docker compose run --rm lakehouse python -m lakehouse.jobs.run_data_quality --env dev --layers gold --gold-tables player_metrics,champion_metrics
+docker compose run --rm lakehouse python -m lakehouse.jobs.run_data_quality --env dev --layers gold --gold-tables mart_player_daily_performance,mart_champion_daily_performance
 ```
 
 The job writes JSON and Markdown reports under `reports/data_quality/`, including `data_quality_latest.json` and `data_quality_latest.md`. It checks table existence, row counts, expected columns, required values, uniqueness, non-negative metrics, win-rate ranges, and basic aggregate consistency without calling any AI API.
@@ -111,7 +117,7 @@ GROUP BY dataset, game_date;
 
 - Bronze: append-only Parquet ingestion from raw JSON with dataset, file path, file hash, ingestion timestamp, ingestion date, and original JSON payload string.
 - Silver: cleaned domain tables for matches, participants, teams, summoners, ranked, timeline frames, and timeline events.
-- Gold: analytics aggregates for players, champions, roles, ranks, and team objectives, written as Parquet from Silver.
+- Gold: conformed dimensions, event/snapshot facts, and analytics marts for players, champions, roles, ranks, and team objectives.
 - Platinum: ML-ready feature tables for match win, player performance, and champion meta modeling.
 
 Current work has runnable Bronze, Silver, and Gold layers. Platinum scaffolds remain available for later stages.

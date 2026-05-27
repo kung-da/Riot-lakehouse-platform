@@ -115,11 +115,11 @@ def test_quality_rules_use_riot_stable_identifiers():
     assert "summoner_id" not in ranked_required.columns
     assert "league_id" not in ranked_required.columns
 
-    team_objective_rules = rules_for_table("gold", "team_objective_metrics")
+    team_objective_rules = rules_for_table("gold", "mart_team_objective_daily_summary")
     team_objective_rule_names = {rule.name for rule in team_objective_rules}
-    assert "team_id_known_values" not in team_objective_rule_names
+    assert "team_id_known_values" in team_objective_rule_names
     assert "team_count_positive" in team_objective_rule_names
-    assert "team_objective_metrics_non_negative" in team_objective_rule_names
+    assert "team_objective_summary_non_negative" in team_objective_rule_names
 
 
 def test_run_data_quality_help():
@@ -146,10 +146,13 @@ def test_data_quality_writes_reports_and_flags_failed_gold_checks(tmp_path: Path
     spark = get_spark(config=config)
     try:
         (
-            spark.createDataFrame(_player_metric_rows(), schema=gold_schema("player_metrics"))
+            spark.createDataFrame(
+                _player_metric_rows(),
+                schema=gold_schema("mart_player_daily_performance"),
+            )
             .write.mode("overwrite")
             .partitionBy("game_date")
-            .parquet(config.layer_path("gold", "player_metrics").as_posix())
+            .parquet(config.layer_path("gold", "mart_player_daily_performance").as_posix())
         )
     finally:
         spark.stop()
@@ -157,7 +160,7 @@ def test_data_quality_writes_reports_and_flags_failed_gold_checks(tmp_path: Path
     result = run_data_quality(
         config,
         layers=["gold"],
-        tables_by_layer={"gold": ["player_metrics"]},
+        tables_by_layer={"gold": ["mart_player_daily_performance"]},
     )
     report = result["report"]
 
@@ -177,7 +180,7 @@ def test_data_quality_writes_reports_and_flags_failed_gold_checks(tmp_path: Path
     assert markdown_path.exists()
     assert (config.report_root / "data_quality" / "data_quality_latest.json").exists()
     assert json.loads(json_path.read_text(encoding="utf-8"))["status"] == "FAIL"
-    assert "player_metrics" in markdown_path.read_text(encoding="utf-8")
+    assert "mart_player_daily_performance" in markdown_path.read_text(encoding="utf-8")
 
 
 def test_accepted_value_warnings_include_top_invalid_values(tmp_path: Path):

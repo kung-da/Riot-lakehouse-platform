@@ -3,16 +3,164 @@ from __future__ import annotations
 from typing import Any
 
 
-GOLD_TABLES = [
-    "player_metrics",
-    "champion_metrics",
-    "role_metrics",
-    "rank_metrics",
-    "team_objective_metrics",
+DIMENSION_TABLES = [
+    "dim_date",
+    "dim_match",
+    "dim_summoner",
+    "dim_champion",
+    "dim_team",
+    "dim_rank",
 ]
 
+FACT_TABLES = [
+    "fact_participant_performance",
+    "fact_team_objectives",
+    "fact_rank_snapshot",
+    "fact_timeline_frames",
+    "fact_timeline_events",
+]
+
+MART_TABLES = [
+    "mart_player_daily_performance",
+    "mart_champion_daily_performance",
+    "mart_role_daily_performance",
+    "mart_rank_daily_summary",
+    "mart_team_objective_daily_summary",
+]
+
+GOLD_TABLES = [*DIMENSION_TABLES, *FACT_TABLES, *MART_TABLES]
+
 GOLD_COLUMNS = {
-    "player_metrics": [
+    "dim_date": [
+        "date_key",
+        "game_date",
+        "date_year",
+        "date_month",
+        "date_day",
+        "day_of_week",
+    ],
+    "dim_match": [
+        "match_id",
+        "game_id",
+        "platform_id",
+        "queue_id",
+        "game_mode",
+        "game_type",
+        "game_version",
+        "game_creation",
+        "game_start_timestamp",
+        "game_end_timestamp",
+        "game_duration",
+        "participant_count",
+        "game_date",
+    ],
+    "dim_summoner": [
+        "puuid",
+        "summoner_id",
+        "account_id",
+        "summoner_name",
+        "riot_id_game_name",
+        "riot_id_tagline",
+        "profile_icon_id",
+        "revision_date",
+        "summoner_level",
+        "first_seen_game_date",
+        "last_seen_game_date",
+    ],
+    "dim_champion": [
+        "champion_id",
+        "champion_name",
+        "first_seen_game_date",
+        "last_seen_game_date",
+    ],
+    "dim_team": [
+        "team_id",
+        "team_side",
+        "first_seen_game_date",
+        "last_seen_game_date",
+    ],
+    "dim_rank": [
+        "queue",
+        "tier",
+        "rank",
+        "rank_order",
+    ],
+    "fact_participant_performance": [
+        "game_date",
+        "match_id",
+        "participant_id",
+        "puuid",
+        "summoner_id",
+        "champion_id",
+        "team_id",
+        "team_position",
+        "win",
+        "kills",
+        "deaths",
+        "assists",
+        "kda",
+        "gold_earned",
+        "total_damage_dealt_to_champions",
+        "total_damage_taken",
+        "vision_score",
+        "total_minions_killed",
+        "neutral_minions_killed",
+        "cs",
+    ],
+    "fact_team_objectives": [
+        "game_date",
+        "match_id",
+        "team_id",
+        "team_side",
+        "win",
+        "baron_kills",
+        "dragon_kills",
+        "rift_herald_kills",
+        "tower_kills",
+        "inhibitor_kills",
+        "champion_kills",
+        "objective_score",
+    ],
+    "fact_rank_snapshot": [
+        "game_date",
+        "puuid",
+        "summoner_id",
+        "queue",
+        "tier",
+        "rank",
+        "league_points",
+        "wins",
+        "losses",
+        "win_rate",
+        "hot_streak",
+        "veteran",
+        "fresh_blood",
+        "inactive",
+    ],
+    "fact_timeline_frames": [
+        "game_date",
+        "match_id",
+        "frame_index",
+        "frame_timestamp",
+        "participant_frame_count",
+        "event_count",
+    ],
+    "fact_timeline_events": [
+        "game_date",
+        "match_id",
+        "frame_index",
+        "event_index",
+        "event_timestamp",
+        "event_type",
+        "participant_id",
+        "killer_id",
+        "victim_id",
+        "team_id",
+        "monster_type",
+        "building_type",
+        "lane_type",
+    ],
+    "mart_player_daily_performance": [
         "game_date",
         "puuid",
         "summoner_id",
@@ -37,7 +185,7 @@ GOLD_COLUMNS = {
         "avg_vision_score",
         "avg_cs",
     ],
-    "champion_metrics": [
+    "mart_champion_daily_performance": [
         "game_date",
         "champion_id",
         "champion_name",
@@ -59,7 +207,7 @@ GOLD_COLUMNS = {
         "avg_vision_score",
         "avg_cs",
     ],
-    "role_metrics": [
+    "mart_role_daily_performance": [
         "game_date",
         "team_position",
         "matches_played",
@@ -78,7 +226,7 @@ GOLD_COLUMNS = {
         "avg_vision_score",
         "avg_cs",
     ],
-    "rank_metrics": [
+    "mart_rank_daily_summary": [
         "game_date",
         "queue",
         "tier",
@@ -93,9 +241,10 @@ GOLD_COLUMNS = {
         "fresh_blood_players",
         "inactive_players",
     ],
-    "team_objective_metrics": [
+    "mart_team_objective_daily_summary": [
         "game_date",
         "team_id",
+        "team_side",
         "games_played",
         "wins",
         "losses",
@@ -106,26 +255,91 @@ GOLD_COLUMNS = {
         "avg_tower_kills",
         "avg_inhibitor_kills",
         "avg_champion_kills",
+        "avg_objective_score",
     ],
 }
 
+BOOLEAN_COLUMNS = {
+    "win",
+    "hot_streak",
+    "veteran",
+    "fresh_blood",
+    "inactive",
+}
+
 STRING_COLUMNS = {
+    "date_key",
     "game_date",
+    "first_seen_game_date",
+    "last_seen_game_date",
+    "match_id",
+    "platform_id",
+    "game_mode",
+    "game_type",
+    "game_version",
     "puuid",
     "summoner_id",
+    "account_id",
     "summoner_name",
     "riot_id_game_name",
     "riot_id_tagline",
     "champion_name",
+    "team_side",
     "team_position",
     "queue",
     "tier",
     "rank",
+    "event_type",
+    "monster_type",
+    "building_type",
+    "lane_type",
 }
 
 LONG_COLUMNS = {
+    "date_year",
+    "date_month",
+    "date_day",
+    "day_of_week",
+    "game_id",
+    "queue_id",
+    "game_creation",
+    "game_start_timestamp",
+    "game_end_timestamp",
+    "game_duration",
+    "participant_count",
+    "profile_icon_id",
+    "revision_date",
+    "summoner_level",
     "champion_id",
     "team_id",
+    "rank_order",
+    "participant_id",
+    "kills",
+    "deaths",
+    "assists",
+    "gold_earned",
+    "total_damage_dealt_to_champions",
+    "total_damage_taken",
+    "vision_score",
+    "total_minions_killed",
+    "neutral_minions_killed",
+    "cs",
+    "baron_kills",
+    "dragon_kills",
+    "rift_herald_kills",
+    "tower_kills",
+    "inhibitor_kills",
+    "champion_kills",
+    "objective_score",
+    "frame_index",
+    "frame_timestamp",
+    "participant_frame_count",
+    "event_count",
+    "event_index",
+    "event_timestamp",
+    "killer_id",
+    "victim_id",
+    "league_points",
     "matches_played",
     "games_played",
     "wins",
@@ -145,6 +359,7 @@ LONG_COLUMNS = {
 }
 
 DOUBLE_COLUMNS = {
+    "kda",
     "win_rate",
     "avg_kills",
     "avg_deaths",
@@ -163,18 +378,28 @@ DOUBLE_COLUMNS = {
     "avg_tower_kills",
     "avg_inhibitor_kills",
     "avg_champion_kills",
+    "avg_objective_score",
 }
 
 
 def gold_schema(table: str) -> Any:
-    from pyspark.sql.types import DoubleType, LongType, StringType, StructField, StructType
+    from pyspark.sql.types import (
+        BooleanType,
+        DoubleType,
+        LongType,
+        StringType,
+        StructField,
+        StructType,
+    )
 
     if table not in GOLD_COLUMNS:
         raise ValueError(f"Unknown gold table: {table}")
 
     fields = []
     for column in GOLD_COLUMNS[table]:
-        if column in STRING_COLUMNS:
+        if column in BOOLEAN_COLUMNS:
+            data_type = BooleanType()
+        elif column in STRING_COLUMNS:
             data_type = StringType()
         elif column in LONG_COLUMNS:
             data_type = LongType()

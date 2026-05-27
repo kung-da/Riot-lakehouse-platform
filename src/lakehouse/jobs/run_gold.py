@@ -13,7 +13,7 @@ def _split_csv(value: str | None) -> list[str] | None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run Gold analytics aggregates")
+    parser = argparse.ArgumentParser(description="Run Gold dimensional model and analytics marts")
     parser.add_argument("--env", default="dev", help="Config environment name from configs/<env>.yaml")
     parser.add_argument(
         "--tables",
