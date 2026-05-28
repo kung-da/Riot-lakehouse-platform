@@ -10,6 +10,7 @@ __pycache__/
 # Lakehouse outputs are reproducible
 data/lakehouse/
 metadata/checkpoints/
+metadata/airflow/
 reports/
 
 # Spark/Airflow local noise

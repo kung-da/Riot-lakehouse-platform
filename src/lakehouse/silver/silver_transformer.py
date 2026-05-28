@@ -6,6 +6,7 @@ from typing import Any, Mapping
 
 from lakehouse.common.logging import get_logger
 from lakehouse.common.spark import get_spark
+from lakehouse.common.storage import has_files, to_spark_path
 from lakehouse.silver.clean_matches import clean_match
 from lakehouse.silver.clean_participants import clean_participants
 from lakehouse.silver.clean_ranked import clean_ranked
@@ -238,17 +239,11 @@ def _silver_schema(table: str) -> Any:
 
 
 def _spark_path(path: Any) -> str:
-    path_text = path.as_posix()
-    if path_text.startswith("s3:/") and not path_text.startswith("s3://"):
-        return "s3://" + path_text.removeprefix("s3:/").lstrip("/")
-    return path_text
+    return to_spark_path(path)
 
 
 def _has_parquet_files(path: Any) -> bool:
-    path_text = path.as_posix()
-    if path_text.startswith("s3:/"):
-        return True
-    return path.exists() and any(path.rglob("*.parquet"))
+    return has_files(path, "*.parquet")
 
 
 def _selected_tables(tables: list[str] | None) -> list[str]:
@@ -291,7 +286,9 @@ def derive_game_date_from_ms(timestamp_ms: Any) -> str | None:
         return None
 
 
-def _game_date_for_payload(dataset: str, payload: dict[str, Any], ingest_date: str | None) -> str | None:
+def _game_date_for_payload(
+    dataset: str, payload: dict[str, Any], ingest_date: str | None
+) -> str | None:
     if dataset in {"summoners", "ranked"}:
         return ingest_date
 
@@ -381,7 +378,9 @@ def _silver_output_partitions(config: Any) -> int:
 
 
 def _silver_partition_columns(config: Any) -> list[str]:
-    partition_config = config.values.get("partition_columns", {}) if hasattr(config, "values") else {}
+    partition_config = (
+        config.values.get("partition_columns", {}) if hasattr(config, "values") else {}
+    )
     columns = partition_config.get("silver", [])
     return [str(column) for column in columns]
 
@@ -437,7 +436,9 @@ def run_silver_transform(
 
         for table in selected_tables:
             table_datasets = TABLE_DATASETS[table]
-            if selected_datasets is not None and not set(table_datasets).intersection(selected_datasets):
+            if selected_datasets is not None and not set(table_datasets).intersection(
+                selected_datasets
+            ):
                 continue
 
             table_bronze = bronze.where(bronze.dataset.isin(*table_datasets))

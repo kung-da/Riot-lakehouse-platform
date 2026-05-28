@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 
-from lakehouse.common.config import load_config
+from lakehouse.jobs._cli import add_config_args, load_config_from_args
 from lakehouse.silver.silver_transformer import SILVER_TABLES, run_silver_transform
 
 
@@ -14,7 +14,7 @@ def _split_csv(value: str | None) -> list[str] | None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run Silver transforms")
-    parser.add_argument("--env", default="dev", help="Config environment name from configs/<env>.yaml")
+    add_config_args(parser)
     parser.add_argument(
         "--datasets",
         help="Comma-separated Bronze datasets to transform, e.g. matches,timelines",
@@ -30,7 +30,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    config = load_config(args.env)
+    config = load_config_from_args(args)
     counts = run_silver_transform(
         config,
         datasets=_split_csv(args.datasets),

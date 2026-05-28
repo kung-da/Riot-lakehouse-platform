@@ -4,9 +4,11 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from lakehouse.common.storage import S3Path
 
-def _checkpoint_key(file_path: Path | str) -> str:
-    if isinstance(file_path, Path):
+
+def _checkpoint_key(file_path: Path | S3Path | str) -> str:
+    if isinstance(file_path, Path | S3Path):
         return file_path.as_posix()
     return str(file_path).replace("\\", "/")
 
@@ -17,7 +19,7 @@ class FileCheckpoint:
     processed_files: set[str] = field(default_factory=set)
 
     @classmethod
-    def load(cls, checkpoint_root: Path, dataset: str) -> "FileCheckpoint":
+    def load(cls, checkpoint_root: Path | S3Path, dataset: str) -> "FileCheckpoint":
         path = checkpoint_root / f"{dataset}.json"
         if not path.exists():
             return cls(dataset=dataset)
@@ -25,15 +27,15 @@ class FileCheckpoint:
             payload = json.load(handle)
         return cls(dataset=dataset, processed_files=set(payload.get("processed_files", [])))
 
-    def save(self, checkpoint_root: Path) -> None:
+    def save(self, checkpoint_root: Path | S3Path) -> None:
         checkpoint_root.mkdir(parents=True, exist_ok=True)
         path = checkpoint_root / f"{self.dataset}.json"
         payload = {"dataset": self.dataset, "processed_files": sorted(self.processed_files)}
         with path.open("w", encoding="utf-8") as handle:
             json.dump(payload, handle, indent=2)
 
-    def is_processed(self, file_path: Path | str) -> bool:
+    def is_processed(self, file_path: Path | S3Path | str) -> bool:
         return _checkpoint_key(file_path) in self.processed_files
 
-    def mark_processed(self, file_path: Path | str) -> None:
+    def mark_processed(self, file_path: Path | S3Path | str) -> None:
         self.processed_files.add(_checkpoint_key(file_path))

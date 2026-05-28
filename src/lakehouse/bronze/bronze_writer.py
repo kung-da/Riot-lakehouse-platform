@@ -4,6 +4,8 @@ import shutil
 from pathlib import Path
 from typing import Any
 
+from lakehouse.common.storage import S3Path, is_s3_path, to_spark_path
+
 
 def _bronze_schema() -> Any:
     from pyspark.sql.types import StringType, StructField, StructType
@@ -20,11 +22,13 @@ def _bronze_schema() -> Any:
     )
 
 
-def _spark_path(path: Path) -> str:
-    return path.as_posix()
+def _spark_path(path: Path | S3Path) -> str:
+    return to_spark_path(path)
 
 
-def cleanup_temporary_output(output_path: Path) -> None:
+def cleanup_temporary_output(output_path: Path | S3Path) -> None:
+    if is_s3_path(output_path):
+        return
     temporary_path = output_path / "_temporary"
     if temporary_path.exists():
         shutil.rmtree(temporary_path)
@@ -33,10 +37,10 @@ def cleanup_temporary_output(output_path: Path) -> None:
 def write_parquet(
     spark: Any,
     records: list[dict[str, str]],
-    output_path: Path,
+    output_path: Path | S3Path,
     partition_columns: list[str],
     output_partitions: int = 1,
-) -> Path:
+) -> Path | S3Path:
     if not records:
         return output_path
 

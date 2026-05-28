@@ -1,9 +1,9 @@
 environment: dev
-project_root: .
-raw_root: raw
-lakehouse_root: data/lakehouse
-checkpoint_root: metadata/checkpoints
-report_root: reports
+project_root: ${PROJECT_ROOT:-.}
+raw_root: ${LAKEHOUSE_RAW_ROOT:-raw}
+lakehouse_root: ${LAKEHOUSE_ROOT:-data/lakehouse}
+checkpoint_root: ${LAKEHOUSE_CHECKPOINT_ROOT:-metadata/checkpoints}
+report_root: ${LAKEHOUSE_REPORT_ROOT:-reports}
 default_format: parquet
 write_mode: append
 partition_columns:
@@ -16,18 +16,18 @@ partition_columns:
   gold:
     - game_date
 spark:
-  app_name: riot-lakehouse-dev
-  master: local[4]
-  enable_delta: false
-  driver_memory: 4g
-  shuffle_partitions: 2
-  default_parallelism: 2
+  app_name: ${SPARK_APP_NAME:-riot-lakehouse-dev}
+  master: ${SPARK_MASTER:-local[4]}
+  enable_delta: ${SPARK_ENABLE_DELTA:-false}
+  driver_memory: ${SPARK_DRIVER_MEMORY:-4g}
+  shuffle_partitions: ${SPARK_SHUFFLE_PARTITIONS:-2}
+  default_parallelism: ${SPARK_DEFAULT_PARALLELISM:-2}
 bronze:
   max_records_per_batch: 1000
   max_bytes_per_batch: 134217728
   output_partitions: 1
   dataset_max_files:
-    timelines: 5414
+    timelines: ${BRONZE_TIMELINE_MAX_FILES:-5414}
   dataset_batch_sizes:
     matches: 1000
     timelines: 25
@@ -50,5 +50,5 @@ quality:
     - gold
   output_dir: data_quality
 riot:
-  platform: vn2
-  region: sea
+  platform: ${RIOT_PLATFORM:-vn2}
+  region: ${RIOT_REGION:-sea}

@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
+from lakehouse.common.storage import S3Path
 from lakehouse.raw.detect_dataset import detect_dataset, detect_dataset_from_path
 
 
@@ -19,7 +20,7 @@ class RawRecord:
     payload_json: str
 
 
-def read_raw_record(path: Path, source_file: str | None = None) -> RawRecord:
+def read_raw_record(path: Path | S3Path, source_file: str | None = None) -> RawRecord:
     raw_bytes = path.read_bytes()
     payload_json = raw_bytes.decode("utf-8")
     dataset = detect_dataset_from_path(path)

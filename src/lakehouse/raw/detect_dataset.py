@@ -3,6 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from lakehouse.common.storage import S3Path
+
 
 DATASET_BY_FOLDER = {
     "matches": "matches",
@@ -12,14 +14,14 @@ DATASET_BY_FOLDER = {
 }
 
 
-def detect_dataset_from_path(path: Path) -> str | None:
+def detect_dataset_from_path(path: Path | S3Path) -> str | None:
     folder_name = path.parent.name.lower()
     if folder_name in DATASET_BY_FOLDER:
         return DATASET_BY_FOLDER[folder_name]
     return None
 
 
-def detect_dataset(path: Path, payload: dict[str, Any] | list[Any] | None = None) -> str:
+def detect_dataset(path: Path | S3Path, payload: dict[str, Any] | list[Any] | None = None) -> str:
     dataset = detect_dataset_from_path(path)
     if dataset:
         return dataset

@@ -4,6 +4,7 @@ from typing import Any
 
 from lakehouse.common.logging import get_logger
 from lakehouse.common.spark import get_spark
+from lakehouse.common.storage import has_files, to_spark_path
 from lakehouse.gold.aggregations import AGGREGATION_BUILDERS, GOLD_TABLE_SOURCES
 from lakehouse.gold.schemas import GOLD_COLUMNS, GOLD_TABLES, gold_schema
 
@@ -12,17 +13,11 @@ LOGGER = get_logger(__name__)
 
 
 def _spark_path(path: Any) -> str:
-    path_text = path.as_posix()
-    if path_text.startswith("s3:/") and not path_text.startswith("s3://"):
-        return "s3://" + path_text.removeprefix("s3:/").lstrip("/")
-    return path_text
+    return to_spark_path(path)
 
 
 def _has_parquet_files(path: Any) -> bool:
-    path_text = path.as_posix()
-    if path_text.startswith("s3:/"):
-        return True
-    return path.exists() and any(path.rglob("*.parquet"))
+    return has_files(path, "*.parquet")
 
 
 def _selected_tables(tables: list[str] | None) -> list[str]:
@@ -46,7 +41,9 @@ def _gold_output_partitions(config: Any) -> int:
 
 
 def _gold_partition_columns(config: Any, dataframe: Any) -> list[str]:
-    partition_config = config.values.get("partition_columns", {}) if hasattr(config, "values") else {}
+    partition_config = (
+        config.values.get("partition_columns", {}) if hasattr(config, "values") else {}
+    )
     configured_columns = partition_config.get("gold")
     if configured_columns is None:
         configured_columns = ["game_date"] if "game_date" in dataframe.columns else []

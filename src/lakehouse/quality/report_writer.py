@@ -4,8 +4,12 @@ import json
 from pathlib import Path
 from typing import Any
 
+from lakehouse.common.storage import S3Path
 
-def write_quality_reports(output_dir: Path, report: dict[str, Any]) -> dict[str, Path]:
+
+def write_quality_reports(
+    output_dir: Path | S3Path, report: dict[str, Any]
+) -> dict[str, Path | S3Path]:
     output_dir.mkdir(parents=True, exist_ok=True)
     run_id = str(report["run_id"])
 
@@ -109,7 +113,7 @@ def render_markdown_report(report: dict[str, Any]) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
-def _write_json(path: Path, report: dict[str, Any]) -> None:
+def _write_json(path: Path | S3Path, report: dict[str, Any]) -> None:
     with path.open("w", encoding="utf-8") as handle:
         json.dump(report, handle, indent=2, sort_keys=True)
 
