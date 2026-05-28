@@ -22,9 +22,13 @@ if DAG:
             task_id="run_gold",
             bash_command=lakehouse_command("lakehouse.jobs.run_gold"),
         )
+        run_platinum = BashOperator(
+            task_id="run_platinum",
+            bash_command=lakehouse_command("lakehouse.jobs.run_platinum"),
+        )
         run_data_quality = BashOperator(
             task_id="run_data_quality",
             bash_command=lakehouse_command("lakehouse.jobs.run_data_quality"),
         )
 
-        run_bronze >> run_silver >> run_gold >> run_data_quality
+        run_bronze >> run_silver >> run_gold >> run_platinum >> run_data_quality
