@@ -153,9 +153,15 @@ def _compact_detail(details: dict[str, Any]) -> str:
         "accepted_values",
         "invalid_rate",
         "top_invalid_values",
+        "checked_distinct_keys",
+        "invalid_distinct_keys",
+        "invalid_reference_count",
         "row_count",
+        "column_count",
         "min_count",
+        "max_count",
         "target",
+        "delta_rate",
     ]
     compact = {key: details[key] for key in preferred_keys if key in details}
     if not compact:

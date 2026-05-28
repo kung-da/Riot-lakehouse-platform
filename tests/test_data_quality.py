@@ -101,6 +101,10 @@ def _rule_by_name(layer: str, table: str, name: str):
     return next(rule for rule in rules_for_table(layer, table) if rule.name == name)
 
 
+def _check_by_name(checks, name: str):
+    return next(check for check in checks if check.name == name)
+
+
 def test_quality_rules_use_riot_stable_identifiers():
     summoner_required = _rule_by_name("silver", "summoners", "required_values_not_null")
     summoner_key = _rule_by_name("silver", "summoners", "unique_business_key")
@@ -120,6 +124,189 @@ def test_quality_rules_use_riot_stable_identifiers():
     assert "team_id_known_values" in team_objective_rule_names
     assert "team_count_positive" in team_objective_rule_names
     assert "team_objective_summary_non_negative" in team_objective_rule_names
+
+    dim_date_key = _rule_by_name("gold", "dim_date", "unique_business_key")
+    assert dim_date_key.columns == ("date_key",)
+
+
+def test_gold_dimension_unique_key_validation(tmp_path: Path):
+    pytest.importorskip("pyspark")
+
+    config = _config(tmp_path)
+    spark = get_spark(config=config)
+    try:
+        dataframe = spark.createDataFrame(
+            [
+                {
+                    "date_key": "20240309",
+                    "game_date": "2024-03-09",
+                    "date_year": 2024,
+                    "date_month": 3,
+                    "date_day": 9,
+                    "day_of_week": 7,
+                },
+                {
+                    "date_key": "20240309",
+                    "game_date": "2024-03-09",
+                    "date_year": 2024,
+                    "date_month": 3,
+                    "date_day": 9,
+                    "day_of_week": 7,
+                },
+            ],
+            schema=gold_schema("dim_date"),
+        )
+        checks = evaluate_rules(dataframe, "gold", "dim_date", dataframe.count())
+    finally:
+        spark.stop()
+
+    assert _check_by_name(checks, "unique_business_key").status == "FAIL"
+
+
+def test_gold_fact_primary_key_duplicate_detection(tmp_path: Path):
+    pytest.importorskip("pyspark")
+
+    row = {
+        "game_date": "2024-03-09",
+        "match_id": "VN2_1",
+        "participant_id": 1,
+        "puuid": "p1",
+        "summoner_id": "s1",
+        "champion_id": 1,
+        "team_id": 100,
+        "team_position": "MIDDLE",
+        "win": True,
+        "kills": 1,
+        "deaths": 0,
+        "assists": 2,
+        "kda": 3.0,
+        "gold_earned": 500,
+        "total_damage_dealt_to_champions": 1000,
+        "total_damage_taken": 800,
+        "vision_score": 5,
+        "total_minions_killed": 20,
+        "neutral_minions_killed": 1,
+        "cs": 21,
+    }
+    config = _config(tmp_path)
+    spark = get_spark(config=config)
+    try:
+        dataframe = spark.createDataFrame(
+            [row, row],
+            schema=gold_schema("fact_participant_performance"),
+        )
+        checks = evaluate_rules(
+            dataframe,
+            "gold",
+            "fact_participant_performance",
+            dataframe.count(),
+        )
+    finally:
+        spark.stop()
+
+    assert _check_by_name(checks, "unique_business_key").status == "FAIL"
+
+
+def test_gold_numeric_non_negative_validation(tmp_path: Path):
+    pytest.importorskip("pyspark")
+
+    config = _config(tmp_path)
+    spark = get_spark(config=config)
+    try:
+        dataframe = spark.createDataFrame(
+            [
+                {
+                    "game_date": "2024-03-09",
+                    "match_id": "VN2_1",
+                    "team_id": 100,
+                    "team_side": "BLUE",
+                    "win": True,
+                    "baron_kills": 0,
+                    "dragon_kills": 1,
+                    "rift_herald_kills": 0,
+                    "tower_kills": 1,
+                    "inhibitor_kills": 0,
+                    "champion_kills": 3,
+                    "objective_score": -1,
+                }
+            ],
+            schema=gold_schema("fact_team_objectives"),
+        )
+        checks = evaluate_rules(dataframe, "gold", "fact_team_objectives", dataframe.count())
+    finally:
+        spark.stop()
+
+    assert _check_by_name(checks, "non_negative_metrics").status == "FAIL"
+
+
+def test_gold_dim_team_expected_values_warn(tmp_path: Path):
+    pytest.importorskip("pyspark")
+
+    config = _config(tmp_path)
+    spark = get_spark(config=config)
+    try:
+        dataframe = spark.createDataFrame(
+            [
+                {
+                    "team_id": 300,
+                    "team_side": "UNKNOWN",
+                    "first_seen_game_date": "2024-03-09",
+                    "last_seen_game_date": "2024-03-09",
+                }
+            ],
+            schema=gold_schema("dim_team"),
+        )
+        checks = evaluate_rules(dataframe, "gold", "dim_team", dataframe.count())
+    finally:
+        spark.stop()
+
+    assert _check_by_name(checks, "team_id_known_values").status == "WARN"
+    assert _check_by_name(checks, "row_count_expectation").status == "WARN"
+
+
+def test_gold_mart_champion_win_rate_validation(tmp_path: Path):
+    pytest.importorskip("pyspark")
+
+    config = _config(tmp_path)
+    spark = get_spark(config=config)
+    try:
+        dataframe = spark.createDataFrame(
+            [
+                {
+                    "game_date": "2024-03-09",
+                    "champion_id": 1,
+                    "champion_name": "Annie",
+                    "matches_played": 1,
+                    "unique_players": 1,
+                    "wins": 2,
+                    "losses": 0,
+                    "win_rate": 1.2,
+                    "total_kills": 1,
+                    "total_deaths": 0,
+                    "total_assists": 1,
+                    "avg_kills": 1.0,
+                    "avg_deaths": 0.0,
+                    "avg_assists": 1.0,
+                    "avg_kda": 2.0,
+                    "avg_gold_earned": 500.0,
+                    "avg_damage_dealt_to_champions": 1000.0,
+                    "avg_damage_taken": 800.0,
+                    "avg_vision_score": 5.0,
+                    "avg_cs": 21.0,
+                }
+            ],
+            schema=gold_schema("mart_champion_daily_performance"),
+        )
+        checks = evaluate_rules(
+            dataframe,
+            "gold",
+            "mart_champion_daily_performance",
+            dataframe.count(),
+        )
+    finally:
+        spark.stop()
+
+    assert _check_by_name(checks, "rates_between_zero_and_one").status == "FAIL"
 
 
 def test_run_data_quality_help():

@@ -10,7 +10,9 @@ from lakehouse.quality.report_writer import write_quality_reports
 from lakehouse.quality.rules import (
     FAIL,
     PASS,
+    SKIP,
     WARN,
+    WARNING,
     RuleResult,
     evaluate_rules,
     expected_tables,
@@ -21,6 +23,79 @@ LOGGER = get_logger(__name__)
 SUPPORTED_LAYERS = ("silver", "gold")
 READY = "READY"
 READY_WITH_WARNINGS = "READY_WITH_WARNINGS"
+
+GOLD_REFERENCE_CHECKS = (
+    (
+        "fact_participant_performance",
+        ("match_id",),
+        "dim_match",
+        ("match_id",),
+        "participant_match_fk",
+    ),
+    (
+        "fact_participant_performance",
+        ("puuid",),
+        "dim_summoner",
+        ("puuid",),
+        "participant_summoner_fk",
+    ),
+    (
+        "fact_participant_performance",
+        ("champion_id",),
+        "dim_champion",
+        ("champion_id",),
+        "participant_champion_fk",
+    ),
+    (
+        "fact_participant_performance",
+        ("team_id",),
+        "dim_team",
+        ("team_id",),
+        "participant_team_fk",
+    ),
+    (
+        "fact_team_objectives",
+        ("match_id",),
+        "dim_match",
+        ("match_id",),
+        "team_objectives_match_fk",
+    ),
+    (
+        "fact_team_objectives",
+        ("team_id",),
+        "dim_team",
+        ("team_id",),
+        "team_objectives_team_fk",
+    ),
+    (
+        "fact_rank_snapshot",
+        ("puuid",),
+        "dim_summoner",
+        ("puuid",),
+        "rank_snapshot_summoner_fk",
+    ),
+    (
+        "fact_rank_snapshot",
+        ("queue", "tier", "rank"),
+        "dim_rank",
+        ("queue", "tier", "rank"),
+        "rank_snapshot_rank_fk",
+    ),
+    (
+        "fact_timeline_frames",
+        ("match_id",),
+        "dim_match",
+        ("match_id",),
+        "timeline_frames_match_fk",
+    ),
+    (
+        "fact_timeline_events",
+        ("match_id",),
+        "dim_match",
+        ("match_id",),
+        "timeline_events_match_fk",
+    ),
+)
 
 
 def run_data_quality(
@@ -71,6 +146,9 @@ def build_data_quality_report(
             LOGGER.info("Running quality checks for %s.%s at %s", layer, table, table_path)
             report["tables"].append(_analyze_table(spark, layer, table, table_path))
 
+    if "gold" in layers:
+        _append_gold_star_schema_checks(spark, config, report, tables_by_layer)
+
     report["status"] = _overall_status(report["tables"])
     report["summary"] = _summary(report["tables"], report["status"])
     return report
@@ -100,7 +178,18 @@ def _analyze_table(spark: Any, layer: str, table: str, table_path: Path) -> dict
     dataframe = spark.read.parquet(_spark_path(table_path)).cache()
     try:
         row_count = int(dataframe.count())
-        checks = [result.as_dict() for result in evaluate_rules(dataframe, layer, table, row_count)]
+        checks = [
+            RuleResult(
+                name="table_exists",
+                description="Expected Parquet table exists",
+                severity="error",
+                status=PASS,
+                passed=True,
+                failed_rows=0,
+                details={"path": str(table_path)},
+            ).as_dict(),
+            *[result.as_dict() for result in evaluate_rules(dataframe, layer, table, row_count)],
+        ]
         profile = _profile_table(dataframe, row_count)
         status = _overall_status_from_checks(checks)
         return {
@@ -114,6 +203,201 @@ def _analyze_table(spark: Any, layer: str, table: str, table_path: Path) -> dict
         }
     finally:
         dataframe.unpersist()
+
+
+def _append_gold_star_schema_checks(
+    spark: Any,
+    config: Any,
+    report: dict[str, Any],
+    tables_by_layer: dict[str, list[str]],
+) -> None:
+    selected_gold_tables = set(tables_by_layer.get("gold", []))
+    table_reports = {
+        table["table"]: table for table in report["tables"] if table["layer"] == "gold"
+    }
+
+    for fact_table, fact_columns, dim_table, dim_columns, check_name in GOLD_REFERENCE_CHECKS:
+        if fact_table not in selected_gold_tables:
+            continue
+        table_report = table_reports.get(fact_table)
+        if not table_report or not table_report.get("profile"):
+            continue
+        check = _gold_reference_check(
+            spark=spark,
+            config=config,
+            fact_table=fact_table,
+            fact_columns=fact_columns,
+            dim_table=dim_table,
+            dim_columns=dim_columns,
+            check_name=check_name,
+        )
+        _append_check(table_report, check)
+
+    _append_dim_match_row_count_alignment(report)
+
+
+def _gold_reference_check(
+    spark: Any,
+    config: Any,
+    fact_table: str,
+    fact_columns: tuple[str, ...],
+    dim_table: str,
+    dim_columns: tuple[str, ...],
+    check_name: str,
+) -> dict[str, Any]:
+    fact_path = config.layer_path("gold", fact_table)
+    dim_path = config.layer_path("gold", dim_table)
+    if not _has_parquet_files(fact_path) or not _has_parquet_files(dim_path):
+        return RuleResult(
+            name=check_name,
+            description=f"{fact_table} references existing {dim_table} keys",
+            severity=WARNING,
+            status=SKIP,
+            passed=False,
+            details={"fact_path": str(fact_path), "dimension_path": str(dim_path)},
+        ).as_dict()
+    if len(fact_columns) != len(dim_columns):
+        return RuleResult(
+            name=check_name,
+            description=f"{fact_table} references existing {dim_table} keys",
+            severity=WARNING,
+            status=SKIP,
+            passed=False,
+            details={
+                "fact_columns": list(fact_columns),
+                "dimension_columns": list(dim_columns),
+            },
+        ).as_dict()
+
+    fact_dataframe = spark.read.parquet(_spark_path(fact_path))
+    dimension_dataframe = spark.read.parquet(_spark_path(dim_path))
+    missing_fact_columns = [
+        column for column in fact_columns if column not in fact_dataframe.columns
+    ]
+    missing_dim_columns = [
+        column for column in dim_columns if column not in dimension_dataframe.columns
+    ]
+    if missing_fact_columns or missing_dim_columns:
+        return RuleResult(
+            name=check_name,
+            description=f"{fact_table} references existing {dim_table} keys",
+            severity=WARNING,
+            status=SKIP,
+            passed=False,
+            details={
+                "missing_fact_columns": missing_fact_columns,
+                "missing_dimension_columns": missing_dim_columns,
+            },
+        ).as_dict()
+
+    fact = fact_dataframe.select(*fact_columns)
+    dimension = dimension_dataframe.select(*dim_columns)
+    fact_keys = _nonnull_distinct_keys(fact, fact_columns, "fact")
+    dim_keys = _nonnull_distinct_keys(dimension, dim_columns, "dim")
+    checked_keys = int(fact_keys.count())
+    invalid_keys = int(
+        fact_keys.join(
+            dim_keys,
+            _join_condition(len(fact_columns)),
+            "left_anti",
+        ).count()
+    )
+    invalid_rate = _ratio(invalid_keys, checked_keys)
+    status = WARN if invalid_keys else PASS
+    return RuleResult(
+        name=check_name,
+        description=f"{fact_table} references existing {dim_table} keys",
+        severity=WARNING,
+        status=status,
+        passed=invalid_keys == 0,
+        failed_rows=invalid_keys,
+        details={
+            "fact_table": fact_table,
+            "fact_columns": list(fact_columns),
+            "dimension_table": dim_table,
+            "dimension_columns": list(dim_columns),
+            "checked_distinct_keys": checked_keys,
+            "invalid_distinct_keys": invalid_keys,
+            "invalid_rate": invalid_rate,
+        },
+    ).as_dict()
+
+
+def _nonnull_distinct_keys(dataframe: Any, columns: tuple[str, ...], prefix: str) -> Any:
+    from pyspark.sql import functions as F
+
+    condition = None
+    for column in columns:
+        column_condition = F.col(column).isNotNull()
+        condition = column_condition if condition is None else condition & column_condition
+    selected = dataframe.where(condition) if condition is not None else dataframe
+    return selected.select(
+        *[F.col(column).alias(f"{prefix}_{index}") for index, column in enumerate(columns)]
+    ).dropDuplicates()
+
+
+def _join_condition(column_count: int) -> Any:
+    from functools import reduce
+    from operator import and_
+
+    from pyspark.sql import functions as F
+
+    conditions = [
+        F.col(f"fact_{index}").eqNullSafe(F.col(f"dim_{index}"))
+        for index in range(column_count)
+    ]
+    return reduce(and_, conditions)
+
+
+def _append_dim_match_row_count_alignment(report: dict[str, Any]) -> None:
+    silver_match = _table_report(report, "silver", "matches")
+    dim_match = _table_report(report, "gold", "dim_match")
+    if not silver_match or not dim_match or not dim_match.get("profile"):
+        return
+
+    silver_count = int(silver_match.get("row_count", 0))
+    dim_count = int(dim_match.get("row_count", 0))
+    delta = abs(dim_count - silver_count)
+    delta_rate = _ratio(delta, silver_count)
+    status = WARN if delta_rate > 0.01 else PASS
+    _append_check(
+        dim_match,
+        RuleResult(
+            name="silver_match_row_count_alignment",
+            description="dim_match row count is close to silver.matches row count",
+            severity=WARNING,
+            status=status,
+            passed=status == PASS,
+            failed_rows=delta,
+            details={
+                "silver_matches_row_count": silver_count,
+                "dim_match_row_count": dim_count,
+                "delta": delta,
+                "delta_rate": delta_rate,
+                "warn_threshold": 0.01,
+            },
+        ).as_dict(),
+    )
+
+
+def _table_report(
+    report: dict[str, Any],
+    layer: str,
+    table: str,
+) -> dict[str, Any] | None:
+    return next(
+        (
+            table_report
+            for table_report in report["tables"]
+            if table_report["layer"] == layer and table_report["table"] == table
+        ),
+        None,
+    )
+
+
+def _append_check(table_report: dict[str, Any], check: dict[str, Any]) -> None:
+    table_report.setdefault("checks", []).append(check)
+    table_report["status"] = _overall_status_from_checks(table_report["checks"])
 
 
 def _profile_table(dataframe: Any, row_count: int) -> dict[str, Any]:
