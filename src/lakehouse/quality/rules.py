@@ -5,7 +5,13 @@ from functools import reduce
 from operator import or_
 from typing import Any
 
-from lakehouse.gold.schemas import DOUBLE_COLUMNS, GOLD_COLUMNS, GOLD_TABLES, LONG_COLUMNS
+from lakehouse.gold.schemas import (
+    BOOLEAN_COLUMNS,
+    DOUBLE_COLUMNS,
+    GOLD_COLUMNS,
+    GOLD_TABLES,
+    LONG_COLUMNS,
+)
 from lakehouse.silver.silver_transformer import SILVER_TABLES, TABLE_FIELDS
 
 
@@ -37,7 +43,7 @@ SILVER_KEYS = {
 }
 
 GOLD_KEYS = {
-    "dim_date": ("game_date",),
+    "dim_date": ("date_key",),
     "dim_match": ("match_id",),
     "dim_summoner": ("puuid",),
     "dim_champion": ("champion_id",),
@@ -80,7 +86,7 @@ SILVER_REQUIRED = {
 }
 
 GOLD_REQUIRED = {
-    "dim_date": ("date_key", "game_date"),
+    "dim_date": ("date_key", "game_date", "date_year", "date_month", "date_day"),
     "dim_match": ("match_id", "game_date"),
     "dim_summoner": ("puuid",),
     "dim_champion": ("champion_id", "champion_name"),
@@ -220,6 +226,7 @@ TEAM_ID_TABLES = {
         "dim_team": ("team_id",),
         "fact_participant_performance": ("team_id",),
         "fact_team_objectives": ("team_id",),
+        "fact_timeline_events": ("team_id",),
         "mart_team_objective_daily_summary": ("team_id",),
     },
 }
@@ -244,6 +251,73 @@ TEAM_OBJECTIVE_NON_NEGATIVE_METRICS = {
     "avg_inhibitor_kills": ("avg_inhibitor_kills",),
     "avg_champion_kills": ("avg_champion_kills",),
     "avg_objective_score": ("avg_objective_score",),
+}
+
+GOLD_POSITIVE = {
+    "mart_player_daily_performance": ("matches_played", "unique_champions"),
+    "mart_champion_daily_performance": ("matches_played",),
+    "mart_role_daily_performance": ("matches_played",),
+    "mart_rank_daily_summary": ("players",),
+    "mart_team_objective_daily_summary": ("games_played",),
+}
+
+GOLD_POSITIVE_WITH_TOLERANCE = {
+    "dim_match": {
+        "game_duration": {"min_value": 0.0, "max_invalid_rate": 0.001},
+        "participant_count": {"min_value": 0.0, "max_invalid_rate": 0.001},
+    },
+}
+
+GOLD_BETWEEN = {
+    "dim_date": {
+        "date_month": (1.0, 12.0),
+        "date_day": (1.0, 31.0),
+    },
+}
+
+GOLD_OPTIONAL_NOT_NULL = {
+    "dim_match": ("queue_id", "game_date"),
+}
+
+GOLD_NON_EMPTY_STRINGS = {
+    "dim_champion": ("champion_name",),
+}
+
+GOLD_DATE_ORDER = {
+    "dim_summoner": ("first_seen_game_date", "last_seen_game_date"),
+}
+
+GOLD_ROW_COUNT_EXPECTATIONS = {
+    "dim_team": {
+        "type": "equals",
+        "value": 2,
+        "severity": WARNING,
+        "description": "Dimension contains expected Riot team rows",
+    },
+    "dim_champion": {
+        "type": "between",
+        "min": 100,
+        "max": 250,
+        "severity": WARNING,
+        "description": "Champion dimension row count is in a reasonable range",
+    },
+}
+
+GOLD_NULL_RATE_PROFILES = {
+    "dim_summoner": (
+        "summoner_id",
+        "riot_id_game_name",
+        "riot_id_tagline",
+        "summoner_name",
+    ),
+}
+
+GOLD_OPTIONAL_BOOLEAN_COLUMNS = {
+    "dim_date": ("is_weekend",),
+}
+
+TEAM_ID_ACCEPTED_VALUES = {
+    "fact_timeline_events": (0, 100, 200),
 }
 
 RANK_TIERS = (
@@ -314,6 +388,12 @@ def rules_for_table(layer: str, table: str) -> list[RuleSpec]:
             columns=tuple(expected_columns(layer, table)),
         ),
         RuleSpec(
+            name="column_count_positive",
+            rule_type="column_count_min",
+            description="Table has at least one column",
+            params={"min_count": 1},
+        ),
+        RuleSpec(
             name="table_not_empty",
             rule_type="row_count_min",
             description="Table contains at least one row",
@@ -329,6 +409,17 @@ def rules_for_table(layer: str, table: str) -> list[RuleSpec]:
                 description="Required ranked columns are not null",
                 columns=("queue", "tier", "rank", "puuid", "dataset"),
                 params={"candidates": RANKED_KEY_CANDIDATES},
+            )
+        )
+
+    optional_not_null = GOLD_OPTIONAL_NOT_NULL.get(table, ()) if layer == "gold" else ()
+    if optional_not_null:
+        rules.append(
+            RuleSpec(
+                name="optional_values_not_null",
+                rule_type="not_null_if_present",
+                description="Optional business columns are not null when present",
+                columns=optional_not_null,
             )
         )
     required = SILVER_REQUIRED.get(table, ()) if layer == "silver" else GOLD_REQUIRED.get(table, ())
@@ -375,6 +466,52 @@ def rules_for_table(layer: str, table: str) -> list[RuleSpec]:
                 columns=non_negative,
             )
         )
+    positive = GOLD_POSITIVE.get(table, ()) if layer == "gold" else ()
+    if positive:
+        rules.append(
+            RuleSpec(
+                name="positive_metrics",
+                rule_type="greater_than",
+                description="Metric and count columns are greater than zero when present",
+                columns=positive,
+                params={"min_value": 0},
+            )
+        )
+    for column, params in (
+        GOLD_POSITIVE_WITH_TOLERANCE.get(table, {}) if layer == "gold" else {}
+    ).items():
+        rules.append(
+            RuleSpec(
+                name=f"{column}_positive_tolerance",
+                rule_type="greater_than_with_tolerance",
+                description=f"{column} is usually greater than zero",
+                columns=(column,),
+                params=params,
+            )
+        )
+
+    for column, bounds in (GOLD_BETWEEN.get(table, {}) if layer == "gold" else {}).items():
+        rules.append(
+            RuleSpec(
+                name=f"{column}_between",
+                rule_type="between",
+                description=f"{column} is within expected bounds",
+                columns=(column,),
+                params={"min_value": bounds[0], "max_value": bounds[1]},
+            )
+        )
+
+    row_count_expectation = GOLD_ROW_COUNT_EXPECTATIONS.get(table) if layer == "gold" else None
+    if row_count_expectation:
+        rules.append(
+            RuleSpec(
+                name="row_count_expectation",
+                rule_type="row_count_expectation",
+                description=str(row_count_expectation["description"]),
+                severity=str(row_count_expectation.get("severity", ERROR)),
+                params=row_count_expectation,
+            )
+        )
     if layer == "gold" and table == "mart_team_objective_daily_summary":
         rules.extend(
             [
@@ -405,6 +542,64 @@ def rules_for_table(layer: str, table: str) -> list[RuleSpec]:
             )
         )
 
+    boolean_columns = tuple(
+        column for column in expected_columns(layer, table) if column in BOOLEAN_COLUMNS
+    )
+    if boolean_columns:
+        rules.append(
+            RuleSpec(
+                name="boolean_column_types",
+                rule_type="boolean_type",
+                description="Boolean columns use Spark boolean type",
+                columns=boolean_columns,
+            )
+        )
+    optional_boolean_columns = (
+        GOLD_OPTIONAL_BOOLEAN_COLUMNS.get(table, ()) if layer == "gold" else ()
+    )
+    if optional_boolean_columns:
+        rules.append(
+            RuleSpec(
+                name="optional_boolean_column_types",
+                rule_type="boolean_type_if_present",
+                description="Optional boolean columns use Spark boolean type when present",
+                columns=optional_boolean_columns,
+            )
+        )
+
+    non_empty_strings = GOLD_NON_EMPTY_STRINGS.get(table, ()) if layer == "gold" else ()
+    if non_empty_strings:
+        rules.append(
+            RuleSpec(
+                name="non_empty_strings",
+                rule_type="non_empty_string",
+                description="Required text columns are not empty",
+                columns=non_empty_strings,
+            )
+        )
+
+    date_order_columns = GOLD_DATE_ORDER.get(table) if layer == "gold" else None
+    if date_order_columns:
+        rules.append(
+            RuleSpec(
+                name="valid_date_order",
+                rule_type="date_order",
+                description="First seen date is not after last seen date",
+                columns=date_order_columns,
+            )
+        )
+
+    null_rate_columns = GOLD_NULL_RATE_PROFILES.get(table, ()) if layer == "gold" else ()
+    if null_rate_columns:
+        rules.append(
+            RuleSpec(
+                name="nullable_identifier_null_rates",
+                rule_type="null_rate_profile",
+                description="Nullable identifier columns are profiled without failing",
+                columns=null_rate_columns,
+            )
+        )
+
     if table in {
         "mart_player_daily_performance",
         "mart_champion_daily_performance",
@@ -430,6 +625,7 @@ def rules_for_table(layer: str, table: str) -> list[RuleSpec]:
 
     team_id_columns = TEAM_ID_TABLES.get(layer, {}).get(table, ())
     if team_id_columns:
+        accepted_values = TEAM_ID_ACCEPTED_VALUES.get(table, (100, 200))
         rules.append(
             RuleSpec(
                 name="team_id_known_values",
@@ -437,7 +633,7 @@ def rules_for_table(layer: str, table: str) -> list[RuleSpec]:
                 description="Team identifiers use standard Riot team IDs",
                 severity=WARNING,
                 columns=team_id_columns,
-                params={"values": (100, 200)},
+                params={"values": accepted_values},
             )
         )
 
@@ -495,6 +691,24 @@ def _evaluate_rule(dataframe: Any, rule: RuleSpec, row_count: int) -> RuleResult
             details={"row_count": row_count, "min_count": min_count},
         )
 
+    if rule.rule_type == "column_count_min":
+        min_count = int(rule.params["min_count"])
+        column_count = len(dataframe.columns)
+        return _result(
+            rule,
+            failed=column_count < min_count,
+            details={"column_count": column_count, "min_count": min_count},
+        )
+
+    if rule.rule_type == "row_count_expectation":
+        return _evaluate_row_count_expectation(rule, row_count)
+
+    if rule.rule_type == "boolean_type":
+        return _evaluate_boolean_type(dataframe, rule)
+
+    if rule.rule_type == "boolean_type_if_present":
+        return _evaluate_boolean_type_if_present(dataframe, rule)
+
     if rule.rule_type == "not_null_with_first_available":
         return _evaluate_not_null_with_first_available(dataframe, rule, row_count)
 
@@ -506,6 +720,12 @@ def _evaluate_rule(dataframe: Any, rule: RuleSpec, row_count: int) -> RuleResult
 
     if rule.rule_type == "non_negative_metric_candidates":
         return _evaluate_metric_candidates(dataframe, rule, row_count, min_value=0, strict=False)
+
+    if rule.rule_type == "null_rate_profile":
+        return _evaluate_null_rate_profile(dataframe, rule, row_count)
+
+    if rule.rule_type == "not_null_if_present":
+        return _evaluate_not_null_if_present(dataframe, rule, row_count)
 
     required_columns = _columns_for_rule(rule)
     missing = [column for column in required_columns if column not in dataframe.columns]
@@ -531,6 +751,38 @@ def _evaluate_rule(dataframe: Any, rule: RuleSpec, row_count: int) -> RuleResult
         failed_rows = _count_condition(dataframe, _any_negative(dataframe, rule.columns))
         return _result(rule, failed=failed_rows > 0, failed_rows=failed_rows)
 
+    if rule.rule_type == "greater_than":
+        min_value = float(rule.params["min_value"])
+        failed_rows = _count_condition(
+            dataframe,
+            _any_not_greater_than(dataframe, rule.columns, min_value),
+        )
+        return _result(
+            rule,
+            failed=failed_rows > 0,
+            failed_rows=failed_rows,
+            details={"min_value": min_value},
+        )
+
+    if rule.rule_type == "greater_than_with_tolerance":
+        min_value = float(rule.params["min_value"])
+        max_invalid_rate = float(rule.params["max_invalid_rate"])
+        failed_rows = _count_condition(
+            dataframe,
+            _any_not_greater_than(dataframe, rule.columns, min_value),
+        )
+        invalid_rate = _ratio(failed_rows, row_count)
+        return _result(
+            rule,
+            failed=invalid_rate > max_invalid_rate,
+            failed_rows=failed_rows,
+            details={
+                "min_value": min_value,
+                "invalid_rate": invalid_rate,
+                "max_invalid_rate": max_invalid_rate,
+            },
+        )
+
     if rule.rule_type == "between":
         failed_rows = _count_condition(
             dataframe,
@@ -541,6 +793,14 @@ def _evaluate_rule(dataframe: Any, rule: RuleSpec, row_count: int) -> RuleResult
                 max_value=float(rule.params["max_value"]),
             ),
         )
+        return _result(rule, failed=failed_rows > 0, failed_rows=failed_rows)
+
+    if rule.rule_type == "non_empty_string":
+        failed_rows = _count_condition(dataframe, _any_empty_string(dataframe, rule.columns))
+        return _result(rule, failed=failed_rows > 0, failed_rows=failed_rows)
+
+    if rule.rule_type == "date_order":
+        failed_rows = _count_condition(dataframe, _date_order_invalid(dataframe, rule.columns))
         return _result(rule, failed=failed_rows > 0, failed_rows=failed_rows)
 
     if rule.rule_type == "accepted_values":
@@ -687,6 +947,128 @@ def _evaluate_metric_candidates(
     )
 
 
+def _evaluate_row_count_expectation(rule: RuleSpec, row_count: int) -> RuleResult:
+    expectation_type = str(rule.params["type"])
+    details = {"row_count": row_count, "type": expectation_type}
+    failed = False
+    if expectation_type == "equals":
+        expected = int(rule.params["value"])
+        details["expected"] = expected
+        failed = row_count != expected
+    elif expectation_type == "between":
+        min_count = int(rule.params["min"])
+        max_count = int(rule.params["max"])
+        details.update({"min_count": min_count, "max_count": max_count})
+        failed = row_count < min_count or row_count > max_count
+    else:
+        raise ValueError(f"Unknown row count expectation type: {expectation_type}")
+    return _result(rule, failed=failed, details=details)
+
+
+def _evaluate_boolean_type(dataframe: Any, rule: RuleSpec) -> RuleResult:
+    from pyspark.sql.types import BooleanType
+
+    field_by_name = {field.name: field for field in dataframe.schema.fields}
+    missing = [column for column in rule.columns if column not in field_by_name]
+    if missing:
+        return _skipped_for_missing(rule, missing)
+
+    non_boolean = [
+        column
+        for column in rule.columns
+        if not isinstance(field_by_name[column].dataType, BooleanType)
+    ]
+    return _result(
+        rule,
+        failed=bool(non_boolean),
+        details={"non_boolean_columns": non_boolean},
+    )
+
+
+def _evaluate_boolean_type_if_present(dataframe: Any, rule: RuleSpec) -> RuleResult:
+    present_columns = tuple(column for column in rule.columns if column in dataframe.columns)
+    if not present_columns:
+        return RuleResult(
+            name=rule.name,
+            description=rule.description,
+            severity=rule.severity,
+            status=PASS,
+            passed=True,
+            failed_rows=0,
+            details={"missing_optional_columns": list(rule.columns)},
+        )
+    return _evaluate_boolean_type(
+        dataframe,
+        RuleSpec(
+            name=rule.name,
+            rule_type="boolean_type",
+            description=rule.description,
+            severity=rule.severity,
+            columns=present_columns,
+            params=rule.params,
+        ),
+    )
+
+
+def _evaluate_null_rate_profile(
+    dataframe: Any,
+    rule: RuleSpec,
+    row_count: int,
+) -> RuleResult:
+    from pyspark.sql import functions as F
+
+    present_columns = [column for column in rule.columns if column in dataframe.columns]
+    if not present_columns:
+        return _skipped_for_missing(rule, list(rule.columns))
+
+    values = _aggregate_dict(
+        dataframe,
+        [
+            F.sum(F.when(F.col(column).isNull(), 1).otherwise(0)).alias(column)
+            for column in present_columns
+        ],
+    )
+    null_counts = {column: int(values.get(column) or 0) for column in present_columns}
+    return _result(
+        rule,
+        failed=False,
+        failed_rows=0,
+        details={
+            "row_count": row_count,
+            "null_counts": null_counts,
+            "null_rates": {
+                column: _ratio(null_count, row_count)
+                for column, null_count in null_counts.items()
+            },
+        },
+    )
+
+
+def _evaluate_not_null_if_present(
+    dataframe: Any,
+    rule: RuleSpec,
+    row_count: int,
+) -> RuleResult:
+    present_columns = tuple(column for column in rule.columns if column in dataframe.columns)
+    if not present_columns:
+        return _skipped_for_missing(rule, list(rule.columns))
+
+    failed_rows = 0
+    if row_count > 0:
+        failed_rows = _count_condition(dataframe, _any_null(dataframe, present_columns))
+    return _result(
+        rule,
+        failed=failed_rows > 0,
+        failed_rows=failed_rows,
+        details={
+            "checked_columns": list(present_columns),
+            "missing_optional_columns": [
+                column for column in rule.columns if column not in dataframe.columns
+            ],
+        },
+    )
+
+
 def _first_available_columns(dataframe: Any, rule: RuleSpec) -> tuple[str, ...]:
     for columns in rule.params["candidates"]:
         if all(column in dataframe.columns for column in columns):
@@ -726,6 +1108,12 @@ def _skipped_for_missing(rule: RuleSpec, missing: list[str]) -> RuleResult:
 
 def _count_condition(dataframe: Any, condition: Any) -> int:
     return int(dataframe.where(condition).count())
+
+
+def _aggregate_dict(dataframe: Any, expressions: list[Any]) -> dict[str, Any]:
+    if not expressions:
+        return {}
+    return dataframe.agg(*expressions).collect()[0].asDict()
 
 
 def _ratio(value: int, total: int) -> float:
@@ -770,29 +1158,58 @@ def _any_unaccepted_value(dataframe: Any, columns: tuple[str, ...], values: tupl
 
 def _any_not_greater_than(
     dataframe: Any,
-    metric_columns: dict[str, str],
+    metric_columns: dict[str, str] | tuple[str, ...],
     min_value: int | float,
 ) -> Any:
+    columns = _metric_column_values(metric_columns)
     return reduce(
         or_,
         [
             dataframe[column].isNotNull() & (dataframe[column] <= min_value)
-            for column in metric_columns.values()
+            for column in columns
         ],
     )
 
 
 def _any_less_than(
     dataframe: Any,
-    metric_columns: dict[str, str],
+    metric_columns: dict[str, str] | tuple[str, ...],
     min_value: int | float,
 ) -> Any:
+    columns = _metric_column_values(metric_columns)
     return reduce(
         or_,
         [
             dataframe[column].isNotNull() & (dataframe[column] < min_value)
-            for column in metric_columns.values()
+            for column in columns
         ],
+    )
+
+
+def _metric_column_values(metric_columns: dict[str, str] | tuple[str, ...]) -> tuple[str, ...]:
+    if isinstance(metric_columns, dict):
+        return tuple(metric_columns.values())
+    return metric_columns
+
+
+def _any_empty_string(dataframe: Any, columns: tuple[str, ...]) -> Any:
+    from pyspark.sql import functions as F
+
+    return reduce(
+        or_,
+        [
+            dataframe[column].isNotNull() & (F.length(F.trim(dataframe[column])) == 0)
+            for column in columns
+        ],
+    )
+
+
+def _date_order_invalid(dataframe: Any, columns: tuple[str, ...]) -> Any:
+    start_column, end_column = columns
+    return (
+        dataframe[start_column].isNotNull()
+        & dataframe[end_column].isNotNull()
+        & (dataframe[start_column] > dataframe[end_column])
     )
 
 
