@@ -6,6 +6,7 @@ from typing import Any
 
 from lakehouse.common.logging import get_logger
 from lakehouse.common.spark import get_spark
+from lakehouse.common.storage import S3Path, has_files, to_spark_path
 from lakehouse.quality.report_writer import write_quality_reports
 from lakehouse.quality.rules import (
     FAIL,
@@ -586,24 +587,18 @@ def _overall_status_from_checks(checks: list[dict[str, Any]]) -> str:
     return PASS
 
 
-def _quality_output_dir(config: Any) -> Path:
+def _quality_output_dir(config: Any) -> Path | S3Path:
     quality_config = config.values.get("quality", {}) if hasattr(config, "values") else {}
     output_dir = quality_config.get("output_dir", "data_quality")
     return config.report_root / str(output_dir)
 
 
 def _spark_path(path: Any) -> str:
-    path_text = path.as_posix()
-    if path_text.startswith("s3:/") and not path_text.startswith("s3://"):
-        return "s3://" + path_text.removeprefix("s3:/").lstrip("/")
-    return path_text
+    return to_spark_path(path)
 
 
 def _has_parquet_files(path: Any) -> bool:
-    path_text = path.as_posix()
-    if path_text.startswith("s3:/"):
-        return True
-    return path.exists() and any(path.rglob("*.parquet"))
+    return has_files(path, "*.parquet")
 
 
 def _ratio(value: int, total: int) -> float:

@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 
 from lakehouse.bronze.bronze_ingestion import run_bronze_ingestion
-from lakehouse.common.config import load_config
+from lakehouse.jobs._cli import add_config_args, load_config_from_args
 
 
 DATASET_ALIASES = {
@@ -19,14 +19,19 @@ DATASET_ALIASES = {
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run Bronze ingestion")
-    parser.add_argument("--env", default="dev", help="Config environment name from configs/<env>.yaml")
+    add_config_args(parser)
     parser.add_argument(
         "--datasets",
         nargs="+",
         default=None,
         help="Optional datasets to ingest: matches timelines summoners ranked",
     )
-    parser.add_argument("--max-files", type=int, default=None, help="Maximum new raw files to ingest")
+    parser.add_argument(
+        "--max-files",
+        type=int,
+        default=None,
+        help="Maximum new raw files to ingest",
+    )
     parser.add_argument(
         "--batch-size",
         type=int,
@@ -52,7 +57,7 @@ def _normalize_datasets(datasets: list[str] | None) -> list[str] | None:
 
 def main() -> None:
     args = _parse_args()
-    config = load_config(args.env)
+    config = load_config_from_args(args)
     count = run_bronze_ingestion(
         config=config,
         datasets=_normalize_datasets(args.datasets),

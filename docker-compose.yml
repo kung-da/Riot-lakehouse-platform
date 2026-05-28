@@ -1,14 +1,51 @@
+x-lakehouse-env: &lakehouse-env
+  LAKEHOUSE_ENV: ${LAKEHOUSE_ENV:-dev}
+  LAKEHOUSE_CONFIG_DIR: ${LAKEHOUSE_CONFIG_DIR:-configs}
+  PYTHONPATH: /app/src:/app
+  PYTHONUNBUFFERED: "1"
+
+x-lakehouse-volumes: &lakehouse-volumes
+  - ./raw:/app/raw
+  - ./data:/app/data
+  - ./metadata:/app/metadata
+  - ./reports:/app/reports
+  - ./configs:/app/configs
+  - ./src:/app/src
+  - ./dags:/app/dags
+  - ./scripts:/app/scripts
+  - ./tests:/app/tests
+
 services:
   lakehouse:
-    build: .
+    build:
+      context: .
+      args:
+        INSTALL_EXTRAS: ${LAKEHOUSE_INSTALL_EXTRAS:-dev,spark,aws}
     env_file:
-      - .env
-    volumes:
-      - ./raw:/app/raw
-      - ./data:/app/data
-      - ./metadata:/app/metadata
-      - ./reports:/app/reports
-      - ./configs:/app/configs
-      - ./src:/app/src
-      - ./tests:/app/tests
-    command: ["python", "-m", "lakehouse.jobs.run_bronze", "--env", "dev"]
+      - ${LAKEHOUSE_ENV_FILE:-.env}
+    environment:
+      <<: *lakehouse-env
+    volumes: *lakehouse-volumes
+    command: ["python", "-m", "lakehouse.jobs.run_bronze"]
+
+  airflow:
+    profiles: ["airflow"]
+    build:
+      context: .
+      args:
+        INSTALL_EXTRAS: ${AIRFLOW_INSTALL_EXTRAS:-dev,spark,aws,airflow}
+    env_file:
+      - ${LAKEHOUSE_ENV_FILE:-.env}
+    environment:
+      <<: *lakehouse-env
+      AIRFLOW_HOME: /app/metadata/airflow
+      AIRFLOW__CORE__DAGS_FOLDER: /app/dags
+      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: ${AIRFLOW__CORE__LOAD_EXAMPLES:-false}
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////app/metadata/airflow/airflow.db
+      _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-admin}
+      _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-admin}
+    ports:
+      - "${AIRFLOW_PORT:-8080}:8080"
+    volumes: *lakehouse-volumes
+    command: ["/bin/sh", "/app/scripts/airflow-entrypoint.sh"]

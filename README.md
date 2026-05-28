@@ -15,7 +15,7 @@ Raw JSON is ignored by git. Keep only `.gitkeep` files in source control.
 
 ## Quick Start
 
-Create `.env` from `.env.example` if you need local secrets, then run the Bronze pipeline with Docker Compose:
+Create `.env` from `.env.example`, then run the Bronze pipeline with Docker Compose:
 
 ```bash
 docker compose build
@@ -26,8 +26,11 @@ docker compose run --rm lakehouse pytest -q
 The default container command runs:
 
 ```bash
-python -m lakehouse.jobs.run_bronze --env dev
+python -m lakehouse.jobs.run_bronze
 ```
+
+The job reads `LAKEHOUSE_ENV`, `LAKEHOUSE_CONFIG_DIR`, and `LAKEHOUSE_ENV_FILE` from `.env`.
+By default `LAKEHOUSE_ENV=dev`, so it loads `configs/dev.yaml`.
 
 Bronze Parquet output is written to `data/lakehouse/bronze/raw_json`, partitioned by `dataset` and `ingest_date`.
 
@@ -126,7 +129,53 @@ TODO: Silver and Gold can be migrated from Parquet to Delta Lake in a later vers
 
 ## Configuration
 
-Edit `configs/dev.yaml` for local paths and `configs/tables.yaml` for table metadata. Copy `.env.example` to `.env` for local secrets.
+Edit `.env` for runtime settings, `configs/dev.yaml` / `configs/prod.yaml` for environment
+defaults, and `configs/tables.yaml` for table metadata. Config YAML values support
+`${VAR}`, `${VAR:-default}`, and `${VAR:?message}` interpolation from `.env`.
+
+Local development uses folders under the repo:
+
+```env
+LAKEHOUSE_ENV=dev
+LAKEHOUSE_RAW_ROOT=raw
+LAKEHOUSE_ROOT=data/lakehouse
+LAKEHOUSE_CHECKPOINT_ROOT=metadata/checkpoints
+LAKEHOUSE_REPORT_ROOT=reports
+```
+
+S3 runs use `configs/prod.yaml`:
+
+```env
+LAKEHOUSE_ENV=prod
+AWS_REGION=ap-southeast-1
+AWS_ACCESS_KEY_ID=...
+AWS_SECRET_ACCESS_KEY=...
+S3_BUCKET=my-riot-lakehouse-bucket
+S3_RAW_PREFIX=raw
+S3_LAKEHOUSE_PREFIX=lakehouse
+S3_CHECKPOINT_PREFIX=metadata/checkpoints
+S3_REPORT_PREFIX=reports
+```
+
+Run with a different env file without editing Compose:
+
+```powershell
+$env:LAKEHOUSE_ENV_FILE=".env.prod"
+docker compose --env-file .env.prod run --rm lakehouse python -m lakehouse.jobs.run_full_pipeline
+```
+
+You can also set `LAKEHOUSE_ENV_FILE=.env.prod` inside `.env.prod`.
+
+Start the local Airflow UI:
+
+```bash
+docker compose --profile airflow up --build airflow
+```
+
+Then open `http://localhost:8080` and sign in with `_AIRFLOW_WWW_USER_USERNAME` /
+`_AIRFLOW_WWW_USER_PASSWORD` from `.env` (`admin` / `admin` in `.env.example`).
+The DAGs inherit the same `.env` settings and run the Bronze -> Silver -> Gold -> Data Quality
+chain without hard-coded `--env dev`.
 
 Runtime data is intentionally not committed:
 

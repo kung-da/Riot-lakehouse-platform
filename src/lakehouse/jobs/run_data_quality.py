@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 
-from lakehouse.common.config import load_config
+from lakehouse.jobs._cli import add_config_args, load_config_from_args
 from lakehouse.quality.data_quality import run_data_quality
 
 
@@ -14,11 +14,7 @@ def _split_csv(value: str | None) -> list[str] | None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run Silver/Gold data quality checks")
-    parser.add_argument(
-        "--env",
-        default="dev",
-        help="Config environment name from configs/<env>.yaml",
-    )
+    add_config_args(parser)
     parser.add_argument(
         "--layers",
         help="Comma-separated layers to check. Defaults to quality.layers or silver,gold.",
@@ -32,7 +28,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    config = load_config(args.env)
+    config = load_config_from_args(args)
     tables_by_layer = {
         layer: tables
         for layer, tables in {

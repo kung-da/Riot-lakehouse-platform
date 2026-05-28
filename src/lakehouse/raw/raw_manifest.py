@@ -4,10 +4,11 @@ from dataclasses import asdict
 from pathlib import Path
 
 from lakehouse.common.io import iter_json_files
+from lakehouse.common.storage import S3Path
 from lakehouse.raw.raw_file_reader import read_raw_record
 
 
-def build_raw_manifest(raw_root: Path, datasets: list[str] | None = None) -> list[dict]:
+def build_raw_manifest(raw_root: Path | S3Path, datasets: list[str] | None = None) -> list[dict]:
     selected = datasets or ["matches", "timelines", "summoners", "ranked"]
     records: list[dict] = []
     for dataset in selected:

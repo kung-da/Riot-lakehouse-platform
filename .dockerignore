@@ -10,6 +10,7 @@ __pycache__
 raw/**/*.json
 data/lakehouse
 metadata/checkpoints/*.json
+metadata/airflow
 reports
 logs
 spark-warehouse

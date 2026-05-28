@@ -8,6 +8,7 @@ from typing import Iterator
 from lakehouse.common.checkpoint import FileCheckpoint
 from lakehouse.common.io import iter_json_files
 from lakehouse.common.logging import get_logger
+from lakehouse.common.storage import S3Path
 from lakehouse.raw.raw_file_reader import read_raw_record
 
 
@@ -22,7 +23,7 @@ class BronzeRecordBatch:
     records: list[dict[str, str]]
     checkpoints: dict[str, FileCheckpoint]
 
-    def save_checkpoints(self, checkpoint_root: Path) -> None:
+    def save_checkpoints(self, checkpoint_root: Path | S3Path) -> None:
         for checkpoint in self.checkpoints.values():
             checkpoint.save(checkpoint_root)
 
@@ -30,7 +31,7 @@ class BronzeRecordBatch:
         return len(self.records)
 
 
-def _relative_source_file(raw_root: Path, path: Path) -> str:
+def _relative_source_file(raw_root: Path | S3Path, path: Path | S3Path) -> str:
     try:
         return path.relative_to(raw_root.parent).as_posix()
     except ValueError:
@@ -38,8 +39,8 @@ def _relative_source_file(raw_root: Path, path: Path) -> str:
 
 
 def collect_new_bronze_records(
-    raw_root: Path,
-    checkpoint_root: Path,
+    raw_root: Path | S3Path,
+    checkpoint_root: Path | S3Path,
     datasets: list[str] | None = None,
     max_records_per_batch: int = DEFAULT_MAX_RECORDS_PER_BATCH,
     max_files: int | None = None,
@@ -68,8 +69,8 @@ def collect_new_bronze_records(
 
 
 def iter_new_bronze_record_batches(
-    raw_root: Path,
-    checkpoint_root: Path,
+    raw_root: Path | S3Path,
+    checkpoint_root: Path | S3Path,
     datasets: list[str] | None = None,
     max_records_per_batch: int = DEFAULT_MAX_RECORDS_PER_BATCH,
     max_files: int | None = None,
