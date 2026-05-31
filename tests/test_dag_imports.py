@@ -1,4 +1,6 @@
 import importlib
+from pathlib import Path
+import shlex
 import sys
 import types
 
@@ -10,6 +12,11 @@ DAG_MODULES = [
     "dags.platinum_feature_dag",
     "dags.full_lakehouse_pipeline_dag",
 ]
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _lakehouse_command(module):
+    return f"cd {shlex.quote(str(PROJECT_ROOT))} && python -m {module}"
 
 
 class FakeDAG:
@@ -74,22 +81,22 @@ def test_single_task_dags_with_airflow(monkeypatch):
         "dags.bronze_ingestion_dag": (
             "riot_bronze_ingestion",
             "run_bronze",
-            "python -m lakehouse.jobs.run_bronze",
+            _lakehouse_command("lakehouse.jobs.run_bronze"),
         ),
         "dags.silver_transform_dag": (
             "riot_silver_transform",
             "run_silver",
-            "python -m lakehouse.jobs.run_silver",
+            _lakehouse_command("lakehouse.jobs.run_silver"),
         ),
         "dags.gold_aggregation_dag": (
             "riot_gold_model",
             "run_gold",
-            "python -m lakehouse.jobs.run_gold",
+            _lakehouse_command("lakehouse.jobs.run_gold"),
         ),
         "dags.platinum_feature_dag": (
             "riot_platinum_features",
             "run_platinum",
-            "python -m lakehouse.jobs.run_platinum",
+            _lakehouse_command("lakehouse.jobs.run_platinum"),
         ),
     }
 
@@ -117,12 +124,18 @@ def test_full_dag_task_order_and_commands_with_airflow(monkeypatch):
         "run_platinum",
         "run_data_quality",
     ]
-    assert tasks["run_bronze"].bash_command == "python -m lakehouse.jobs.run_bronze"
-    assert tasks["run_silver"].bash_command == "python -m lakehouse.jobs.run_silver"
-    assert tasks["run_gold"].bash_command == "python -m lakehouse.jobs.run_gold"
-    assert tasks["run_platinum"].bash_command == "python -m lakehouse.jobs.run_platinum"
+    assert tasks["run_bronze"].bash_command == _lakehouse_command(
+        "lakehouse.jobs.run_bronze"
+    )
+    assert tasks["run_silver"].bash_command == _lakehouse_command(
+        "lakehouse.jobs.run_silver"
+    )
+    assert tasks["run_gold"].bash_command == _lakehouse_command("lakehouse.jobs.run_gold")
+    assert tasks["run_platinum"].bash_command == _lakehouse_command(
+        "lakehouse.jobs.run_platinum"
+    )
     assert tasks["run_data_quality"].bash_command == (
-        "python -m lakehouse.jobs.run_data_quality"
+        _lakehouse_command("lakehouse.jobs.run_data_quality")
     )
     assert tasks["run_bronze"].downstream_task_ids == {"run_silver"}
     assert tasks["run_silver"].downstream_task_ids == {"run_gold"}

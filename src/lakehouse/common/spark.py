@@ -33,7 +33,7 @@ def _apply_s3_defaults(builder: Any, config: Any | None, spark_config: dict[str,
         return builder
 
     if spark_config.get("include_hadoop_aws_package", False):
-        package = spark_config.get("hadoop_aws_package", "org.apache.hadoop:hadoop-aws:3.3.4")
+        package = spark_config.get("hadoop_aws_package", "org.apache.hadoop:hadoop-aws:3.4.2")
         builder = builder.config("spark.jars.packages", str(package))
 
     region = _aws_setting(aws_config, "region", "AWS_REGION") or os.getenv("AWS_DEFAULT_REGION")
@@ -45,12 +45,14 @@ def _apply_s3_defaults(builder: Any, config: Any | None, spark_config: dict[str,
 
     builder = (
         builder.config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
-        .config(
-            "spark.hadoop.fs.s3a.aws.credentials.provider",
-            "com.amazonaws.auth.DefaultAWSCredentialsProviderChain",
-        )
         .config("spark.hadoop.fs.s3a.fast.upload", "true")
     )
+    credentials_provider = spark_config.get("aws_credentials_provider")
+    if credentials_provider:
+        builder = builder.config(
+            "spark.hadoop.fs.s3a.aws.credentials.provider",
+            str(credentials_provider),
+        )
     if region:
         builder = builder.config("spark.hadoop.fs.s3a.endpoint.region", str(region))
     if endpoint:
