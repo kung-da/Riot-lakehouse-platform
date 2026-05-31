@@ -600,6 +600,10 @@ Chạy data quality:
 docker compose run --rm lakehouse python -m lakehouse.jobs.run_data_quality --env dev
 ```
 
+Ảnh minh họa report Data Quality:
+
+![Data Quality Report](docs/images/DataQuality.png)
+
 Report output:
 
 ```text
