@@ -270,6 +270,14 @@ def test_run_silver_transform_writes_partitioned_domain_tables(tmp_path: Path):
             "payload_json": json.dumps(_match_payload()),
         },
         {
+            "dataset": "matches",
+            "source_file": "raw/matches/VN2_1.json",
+            "file_hash": "match-hash",
+            "ingest_ts": "2026-05-22T00:00:00Z",
+            "ingest_date": "2026-05-22",
+            "payload_json": json.dumps(_match_payload()),
+        },
+        {
             "dataset": "summoners",
             "source_file": "raw/summoners/s1.json",
             "file_hash": "summoner-hash",

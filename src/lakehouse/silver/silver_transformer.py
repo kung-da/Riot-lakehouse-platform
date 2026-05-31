@@ -38,6 +38,16 @@ TABLE_DATASETS = {
     "timeline_events": ["timelines"],
 }
 
+SILVER_DEDUP_KEYS = {
+    "matches": ["match_id"],
+    "participants": ["match_id", "participant_id"],
+    "teams": ["match_id", "team_id"],
+    "summoners": ["puuid"],
+    "ranked": ["queue", "tier", "rank", "summoner_id", "puuid"],
+    "timeline_frames": ["match_id", "frame_index"],
+    "timeline_events": ["match_id", "frame_index", "event_index"],
+}
+
 VALID_DATASETS = sorted({dataset for datasets in TABLE_DATASETS.values() for dataset in datasets})
 
 LINEAGE_FIELDS = [
@@ -403,6 +413,16 @@ def _write_table(
     writer.parquet(_spark_path(output_path))
 
 
+def _dedupe_table(dataframe: Any, table: str) -> Any:
+    key_columns = SILVER_DEDUP_KEYS.get(table)
+    if not key_columns:
+        return dataframe
+    available_keys = [column for column in key_columns if column in dataframe.columns]
+    if len(available_keys) != len(key_columns):
+        return dataframe
+    return dataframe.dropDuplicates(available_keys)
+
+
 def run_silver_transform(
     config: Any,
     datasets: list[str] | None = None,
@@ -443,7 +463,10 @@ def run_silver_transform(
 
             table_bronze = bronze.where(bronze.dataset.isin(*table_datasets))
             rows = table_bronze.rdd.mapPartitions(_rows_for_table(table, selected_datasets))
-            dataframe = spark.createDataFrame(rows, schema=_silver_schema(table)).cache()
+            dataframe = _dedupe_table(
+                spark.createDataFrame(rows, schema=_silver_schema(table)),
+                table,
+            ).cache()
             row_count = dataframe.count()
             output_path = config.layer_path("silver", table)
             try:
