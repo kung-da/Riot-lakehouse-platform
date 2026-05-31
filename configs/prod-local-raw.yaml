@@ -1,0 +1,44 @@
+environment: prod-local-raw
+project_root: ${PROJECT_ROOT:-.}
+raw_root: ${LAKEHOUSE_RAW_ROOT:-raw}
+lakehouse_root: s3://${S3_BUCKET:?Set S3_BUCKET in your .env}/${S3_LAKEHOUSE_PREFIX:-lakehouse}
+checkpoint_root: s3://${S3_BUCKET:?Set S3_BUCKET in your .env}/${S3_CHECKPOINT_PREFIX:-metadata/checkpoints}
+report_root: s3://${S3_BUCKET:?Set S3_BUCKET in your .env}/${S3_REPORT_PREFIX:-reports}
+default_format: parquet
+write_mode: append
+partition_columns:
+  bronze:
+    - dataset
+    - ingest_date
+  silver:
+    - dataset
+    - game_date
+  gold:
+    - game_date
+spark:
+  app_name: ${SPARK_APP_NAME:-riot-lakehouse-prod-local-raw}
+  master: ${SPARK_MASTER:-local[*]}
+  enable_delta: ${SPARK_ENABLE_DELTA:-false}
+  driver_memory: ${SPARK_DRIVER_MEMORY:-4g}
+  shuffle_partitions: ${SPARK_SHUFFLE_PARTITIONS:-8}
+  default_parallelism: ${SPARK_DEFAULT_PARALLELISM:-8}
+  include_hadoop_aws_package: ${SPARK_INCLUDE_HADOOP_AWS_PACKAGE:-true}
+silver:
+  write_mode: overwrite
+  output_partitions: ${SILVER_OUTPUT_PARTITIONS:-8}
+gold:
+  write_mode: overwrite
+  output_partitions: ${GOLD_OUTPUT_PARTITIONS:-8}
+quality:
+  layers:
+    - silver
+    - gold
+  output_dir: data_quality
+riot:
+  platform: ${RIOT_PLATFORM:-vn2}
+  region: ${RIOT_REGION:-sea}
+aws:
+  region: ${AWS_REGION:-ap-southeast-1}
+  glue_database: ${ATHENA_DATABASE:-riot_lakehouse}
+  s3_endpoint_url: ${AWS_S3_ENDPOINT_URL:-}
+  path_style_access: ${AWS_S3_PATH_STYLE_ACCESS:-false}

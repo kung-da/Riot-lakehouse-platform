@@ -50,9 +50,19 @@ def _s3_client() -> Any:
             "Install the aws extra to use S3 paths: pip install -e '.[aws]'"
         ) from exc
 
-    profile = os.getenv("AWS_PROFILE") or None
-    region_name = os.getenv("AWS_REGION") or os.getenv("AWS_DEFAULT_REGION") or None
-    endpoint_url = os.getenv("AWS_S3_ENDPOINT_URL") or os.getenv("AWS_ENDPOINT_URL") or None
+    def optional_env(name: str) -> str | None:
+        value = os.getenv(name)
+        if value is None:
+            return None
+        normalized = value.strip().strip('"').strip("'")
+        if not normalized:
+            os.environ.pop(name, None)
+            return None
+        return normalized
+
+    profile = optional_env("AWS_PROFILE")
+    region_name = optional_env("AWS_REGION") or optional_env("AWS_DEFAULT_REGION")
+    endpoint_url = optional_env("AWS_S3_ENDPOINT_URL") or optional_env("AWS_ENDPOINT_URL")
     session = boto3.Session(profile_name=profile, region_name=region_name)
     return session.client("s3", endpoint_url=endpoint_url)
 
