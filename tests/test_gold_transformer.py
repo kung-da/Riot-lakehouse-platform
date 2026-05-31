@@ -9,8 +9,11 @@ import pytest
 from lakehouse.common.config import LakehouseConfig
 from lakehouse.common.spark import get_spark
 from lakehouse.gold.aggregations import (
+    build_fact_participant_performance,
+    build_fact_team_objectives,
     build_mart_player_daily_performance,
     build_mart_role_daily_performance,
+    build_mart_team_objective_daily_summary,
 )
 from lakehouse.gold.gold_transformer import GOLD_TABLES, _selected_tables, run_gold_transform
 from lakehouse.gold.schemas import GOLD_COLUMNS
@@ -380,6 +383,44 @@ def test_player_daily_mart_aggregation_logic(tmp_path: Path):
     assert math.isclose(metrics["p1"]["win_rate"], 0.5)
     assert math.isclose(metrics["p1"]["avg_kills"], 4.0)
     assert math.isclose(metrics["p1"]["avg_cs"], 172.0)
+
+
+def test_gold_builders_deduplicate_business_keys_before_metrics(tmp_path: Path):
+    pytest.importorskip("pyspark")
+
+    participant_row = _participant_rows()[0]
+    team_row = _team_rows()[0]
+    config = _config(tmp_path)
+    spark = get_spark(config=config)
+    try:
+        participants = spark.createDataFrame([participant_row, dict(participant_row)])
+        teams = spark.createDataFrame([team_row, dict(team_row)])
+
+        participant_fact = build_fact_participant_performance(
+            {"participants": participants}
+        ).collect()
+        team_fact = build_fact_team_objectives({"teams": teams}).collect()
+        player_metrics = build_mart_player_daily_performance(
+            {"participants": participants}
+        ).collect()[0].asDict()
+        team_metrics = (
+            build_mart_team_objective_daily_summary({"teams": teams})
+            .collect()[0]
+            .asDict()
+        )
+    finally:
+        spark.stop()
+
+    assert len(participant_fact) == 1
+    assert len(team_fact) == 1
+    assert player_metrics["matches_played"] == 1
+    assert player_metrics["wins"] == 1
+    assert player_metrics["losses"] == 0
+    assert math.isclose(player_metrics["win_rate"], 1.0)
+    assert team_metrics["games_played"] == 1
+    assert team_metrics["wins"] == 1
+    assert team_metrics["losses"] == 0
+    assert math.isclose(team_metrics["win_rate"], 1.0)
 
 
 def test_role_daily_mart_normalizes_invalid_role_values(tmp_path: Path):

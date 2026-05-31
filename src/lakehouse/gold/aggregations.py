@@ -141,6 +141,21 @@ def _union_by_name(dataframes: list[Any]) -> Any:
     return reduce(lambda left, right: left.unionByName(right, allowMissingColumns=True), dataframes)
 
 
+def _dedup_by_key(dataframe: Any, key_columns: list[str]) -> Any:
+    available_keys = [column for column in key_columns if column in dataframe.columns]
+    if len(available_keys) != len(key_columns):
+        return dataframe
+    return dataframe.dropDuplicates(available_keys)
+
+
+def _dedup_participants(silver_tables: dict[str, Any]) -> Any:
+    return _dedup_by_key(silver_tables["participants"], ["match_id", "participant_id"])
+
+
+def _dedup_teams(silver_tables: dict[str, Any]) -> Any:
+    return _dedup_by_key(silver_tables["teams"], ["match_id", "team_id"])
+
+
 def _participant_metrics(dataframe: Any, group_columns: list[str], include_totals: bool) -> Any:
     F = _functions()
     aggregations = [
@@ -301,7 +316,7 @@ def build_dim_rank(silver_tables: dict[str, Any]) -> Any:
 
 def build_fact_participant_performance(silver_tables: dict[str, Any]) -> Any:
     return (
-        silver_tables["participants"]
+        _dedup_participants(silver_tables)
         .withColumn("team_position", _normalized_role())
         .withColumn("cs", _cs_column())
         .select(*GOLD_COLUMNS["fact_participant_performance"])
@@ -310,7 +325,7 @@ def build_fact_participant_performance(silver_tables: dict[str, Any]) -> Any:
 
 def build_fact_team_objectives(silver_tables: dict[str, Any]) -> Any:
     return (
-        silver_tables["teams"]
+        _dedup_teams(silver_tables)
         .withColumn("team_side", _team_side())
         .withColumn("objective_score", _objective_score())
         .select(*GOLD_COLUMNS["fact_team_objectives"])
@@ -332,7 +347,7 @@ def build_fact_timeline_events(silver_tables: dict[str, Any]) -> Any:
 def build_mart_player_daily_performance(silver_tables: dict[str, Any]) -> Any:
     F = _functions()
     participants = (
-        silver_tables["participants"]
+        _dedup_participants(silver_tables)
         .where(F.col("puuid").isNotNull())
         .withColumn("team_position", _normalized_role())
         .withColumn("cs", _cs_column())
@@ -367,7 +382,7 @@ def build_mart_player_daily_performance(silver_tables: dict[str, Any]) -> Any:
 
 def build_mart_champion_daily_performance(silver_tables: dict[str, Any]) -> Any:
     participants = (
-        silver_tables["participants"]
+        _dedup_participants(silver_tables)
         .withColumn("team_position", _normalized_role())
         .withColumn("cs", _cs_column())
     )
@@ -383,7 +398,7 @@ def build_mart_champion_daily_performance(silver_tables: dict[str, Any]) -> Any:
 
 def build_mart_role_daily_performance(silver_tables: dict[str, Any]) -> Any:
     participants = (
-        silver_tables["participants"]
+        _dedup_participants(silver_tables)
         .withColumn("team_position", _normalized_role())
         .withColumn("cs", _cs_column())
     )
@@ -417,7 +432,7 @@ def build_mart_rank_daily_summary(silver_tables: dict[str, Any]) -> Any:
 
 def build_mart_team_objective_daily_summary(silver_tables: dict[str, Any]) -> Any:
     F = _functions()
-    teams = silver_tables["teams"].withColumn("team_side", _team_side()).withColumn(
+    teams = _dedup_teams(silver_tables).withColumn("team_side", _team_side()).withColumn(
         "objective_score",
         _objective_score(),
     )
