@@ -1,0 +1,218 @@
+table fact_timeline_events
+	lineageTag: f4d1faae-ebca-4678-8c7f-eafc5b0a30dd
+
+	measure 'Timeline Frames' = COUNTROWS('fact_timeline_frames')
+		lineageTag: 5b6fd7b2-eade-439d-9a38-ae28c01d574c
+
+	measure 'Timeline Frame Event Count' = SUM('fact_timeline_frames'[event_count])
+		lineageTag: 99d5ec35-38ed-4a75-bb6b-4e7a13d60d7e
+
+	measure 'Timeline Events' = COUNTROWS('fact_timeline_events')
+		lineageTag: c0d88c0a-ea33-4699-a2a2-e21b555b9f0e
+
+	measure 'Timeline Event Match Count' = DISTINCTCOUNT('fact_timeline_events'[match_id])
+		lineageTag: 2778dfaf-21ec-4129-9467-8d4d2d756646
+
+	measure 'Avg Events Per Match' = DIVIDE([Timeline Events], [Timeline Event Match Count])
+		lineageTag: 31cc54d9-cc91-41a3-b716-5f304d38abfd
+
+	measure 'Avg Events Per Frame' = DIVIDE([Timeline Events], [Timeline Frames])
+		lineageTag: a2a69316-b0e1-493b-833d-e8fc2f77fc2d
+
+	measure 'Average Event Minute' = DIVIDE(AVERAGE('fact_timeline_events'[event_timestamp]), 60000)
+		lineageTag: fff38a72-4189-42cc-ae6e-1d0eaf9807dc
+
+	measure 'Kill Events' =
+			CALCULATE(
+			    [Timeline Events],
+			    'fact_timeline_events'[event_type] = "CHAMPION_KILL"
+			)
+		lineageTag: fd56d079-c339-4ff0-975a-e272880a9808
+
+	measure 'Elite Monster Events' =
+			CALCULATE(
+			    [Timeline Events],
+			    'fact_timeline_events'[event_type] = "ELITE_MONSTER_KILL"
+			)
+		lineageTag: 30f8f492-c810-435a-8412-5db65651798d
+
+	measure 'Building Events' =
+			CALCULATE(
+			    [Timeline Events],
+			    'fact_timeline_events'[event_type] = "BUILDING_KILL"
+			)
+		lineageTag: 5fed118b-e161-4fd6-9e6f-d0e8dd325a15
+
+	measure 'Dragon Events' =
+			CALCULATE(
+			    [Timeline Events],
+			    'fact_timeline_events'[monster_type] = "DRAGON"
+			)
+		lineageTag: 412e3794-8602-4026-8e59-99d86de19be6
+
+	measure 'Baron Events' =
+			CALCULATE(
+			    [Timeline Events],
+			    'fact_timeline_events'[monster_type] = "BARON_NASHOR"
+			)
+		lineageTag: 33b59250-fa41-44c4-a414-71c2a2af2f49
+
+	measure 'Rift Herald Events' =
+			CALCULATE(
+			    [Timeline Events],
+			    'fact_timeline_events'[monster_type] = "RIFTHERALD"
+			)
+		lineageTag: a7458eb9-0061-4c71-a0bc-f9d323556a4a
+
+	measure 'Tower Events' =
+			CALCULATE(
+			    [Timeline Events],
+			    'fact_timeline_events'[building_type] = "TOWER_BUILDING"
+			)
+		lineageTag: 8c9f72d3-2380-4959-b0e9-a774c4185dba
+
+	measure 'Inhibitor Events' =
+			CALCULATE(
+			    [Timeline Events],
+			    'fact_timeline_events'[building_type] = "INHIBITOR_BUILDING"
+			)
+		lineageTag: 54148e65-ab9e-4e96-8ff1-1d1f9c88e8f4
+
+	measure 'Events Before 15 Minutes' =
+			CALCULATE(
+			    [Timeline Events],
+			    'fact_timeline_events'[event_timestamp] <= 900000
+			)
+		lineageTag: 458ef7a0-f806-4d48-b1b2-a5ab78c00980
+
+	measure 'Kills Before 15 Minutes' =
+			CALCULATE(
+			    [Kill Events],
+			    'fact_timeline_events'[event_timestamp] <= 900000
+			)
+		lineageTag: 298d5a6e-847e-48d2-91d8-931f0036fa2f
+
+	column match_id
+		dataType: string
+		lineageTag: 0bd8044c-795f-46fb-9a0e-7f866c0c8b8f
+		summarizeBy: none
+		sourceColumn: match_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column frame_index
+		dataType: int64
+		formatString: 0
+		lineageTag: 1ad26376-46b2-4997-bec0-c47ee2e77af5
+		summarizeBy: sum
+		sourceColumn: frame_index
+
+		annotation SummarizationSetBy = Automatic
+
+	column event_index
+		dataType: int64
+		formatString: 0
+		lineageTag: 59ff5f90-51ef-44f2-bc14-5158d62a2d79
+		summarizeBy: sum
+		sourceColumn: event_index
+
+		annotation SummarizationSetBy = Automatic
+
+	column event_timestamp
+		dataType: int64
+		formatString: 0
+		lineageTag: 0caa9e84-aeaa-48dd-8340-62d6bbde8e91
+		summarizeBy: sum
+		sourceColumn: event_timestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	column event_type
+		dataType: string
+		lineageTag: f2b9d69f-65b9-41a9-a8d7-20156cf3f745
+		summarizeBy: none
+		sourceColumn: event_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column participant_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 602556bb-c72e-428b-a691-793d8b5cf07e
+		summarizeBy: sum
+		sourceColumn: participant_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column killer_id
+		dataType: int64
+		formatString: 0
+		lineageTag: ef6ceb19-5608-4674-892b-68ba262c723b
+		summarizeBy: sum
+		sourceColumn: killer_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column victim_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 2e124545-2fb7-49f7-a9ef-947fdd0925d8
+		summarizeBy: sum
+		sourceColumn: victim_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column team_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 04fd5c8d-c10c-49bc-b814-9f1e86d37b53
+		summarizeBy: sum
+		sourceColumn: team_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column monster_type
+		dataType: string
+		lineageTag: aaa094b8-c37f-4495-881c-259da1a90d54
+		summarizeBy: none
+		sourceColumn: monster_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column building_type
+		dataType: string
+		lineageTag: edfac480-0342-4f45-aee8-815bc76bbf32
+		summarizeBy: none
+		sourceColumn: building_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column lane_type
+		dataType: string
+		lineageTag: 005c0213-502b-43e8-98fd-7f639b2362a1
+		summarizeBy: none
+		sourceColumn: lane_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column game_date
+		dataType: string
+		lineageTag: e788b81d-988b-4c48-a774-302ae8bab274
+		summarizeBy: none
+		sourceColumn: game_date
+
+		annotation SummarizationSetBy = Automatic
+
+	partition fact_timeline_events = m
+		mode: import
+		source =
+				let
+				    Source = Odbc.DataSource("dsn=riot_lakehouse_athena", [HierarchicalNavigation=true]),
+				    AwsDataCatalog_Database = Source{[Name="AwsDataCatalog",Kind="Database"]}[Data],
+				    riot_lakehouse_Schema = AwsDataCatalog_Database{[Name="riot_lakehouse",Kind="Schema"]}[Data],
+				    fact_timeline_events_Table = riot_lakehouse_Schema{[Name="fact_timeline_events",Kind="Table"]}[Data]
+				in
+				    fact_timeline_events_Table
+
+	annotation PBI_ResultType = Table
+

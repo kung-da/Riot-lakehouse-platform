@@ -1,0 +1,38 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "61983735a3f30c5c635f",
+  "position": {
+    "x": 1024,
+    "y": 88,
+    "z": 1014,
+    "width": 232,
+    "height": 86,
+    "tabOrder": 1014
+  },
+  "visual": {
+    "visualType": "cardVisual",
+    "query": {
+      "queryState": {
+        "Data": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_timeline_events"
+                    }
+                  },
+                  "Property": "Elite Monster Events"
+                }
+              },
+              "queryRef": "fact_timeline_events.Elite Monster Events",
+              "nativeQueryRef": "Elite Monster Events"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

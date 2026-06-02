@@ -1,0 +1,78 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "36af105a3c32960b7b08",
+  "position": {
+    "x": 648,
+    "y": 196,
+    "z": 1021,
+    "width": 608,
+    "height": 220,
+    "tabOrder": 1021
+  },
+  "visual": {
+    "visualType": "clusteredBarChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_champion"
+                    }
+                  },
+                  "Property": "champion_name"
+                }
+              },
+              "queryRef": "dim_champion.champion_name",
+              "nativeQueryRef": "champion_name"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_champion_daily_performance"
+                    }
+                  },
+                  "Property": "Champion Matches"
+                }
+              },
+              "queryRef": "mart_champion_daily_performance.Champion Matches",
+              "nativeQueryRef": "Champion Matches"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Top champion theo l\u01b0\u1ee3t ch\u01a1i'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

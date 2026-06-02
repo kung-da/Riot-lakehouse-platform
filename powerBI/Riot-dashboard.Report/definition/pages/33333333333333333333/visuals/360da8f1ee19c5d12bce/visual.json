@@ -1,0 +1,38 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "360da8f1ee19c5d12bce",
+  "position": {
+    "x": 774,
+    "y": 88,
+    "z": 1013,
+    "width": 232,
+    "height": 86,
+    "tabOrder": 1013
+  },
+  "visual": {
+    "visualType": "cardVisual",
+    "query": {
+      "queryState": {
+        "Data": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_role_daily_performance"
+                    }
+                  },
+                  "Property": "Role Avg CS"
+                }
+              },
+              "queryRef": "mart_role_daily_performance.Role Avg CS",
+              "nativeQueryRef": "Role Avg CS"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

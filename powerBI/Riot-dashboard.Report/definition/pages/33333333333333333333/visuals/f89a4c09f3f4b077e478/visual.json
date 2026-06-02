@@ -1,0 +1,38 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "f89a4c09f3f4b077e478",
+  "position": {
+    "x": 1024,
+    "y": 88,
+    "z": 1014,
+    "width": 232,
+    "height": 86,
+    "tabOrder": 1014
+  },
+  "visual": {
+    "visualType": "cardVisual",
+    "query": {
+      "queryState": {
+        "Data": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_role_daily_performance"
+                    }
+                  },
+                  "Property": "Role Unique Champions"
+                }
+              },
+              "queryRef": "mart_role_daily_performance.Role Unique Champions",
+              "nativeQueryRef": "Role Unique Champions"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

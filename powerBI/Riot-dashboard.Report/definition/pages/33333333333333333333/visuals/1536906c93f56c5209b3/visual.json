@@ -1,0 +1,78 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "1536906c93f56c5209b3",
+  "position": {
+    "x": 24,
+    "y": 196,
+    "z": 1020,
+    "width": 608,
+    "height": 220,
+    "tabOrder": 1020
+  },
+  "visual": {
+    "visualType": "clusteredBarChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_role_daily_performance"
+                    }
+                  },
+                  "Property": "team_position"
+                }
+              },
+              "queryRef": "mart_role_daily_performance.team_position",
+              "nativeQueryRef": "team_position"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_role_daily_performance"
+                    }
+                  },
+                  "Property": "Role Matches"
+                }
+              },
+              "queryRef": "mart_role_daily_performance.Role Matches",
+              "nativeQueryRef": "Role Matches"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Role theo s\u1ed1 tr\u1eadn'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

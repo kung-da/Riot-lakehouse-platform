@@ -1,0 +1,107 @@
+table dim_summoner
+	lineageTag: 2afeb6ce-4173-48f0-83f7-3be3bd09cdbb
+
+	column puuid
+		dataType: string
+		lineageTag: 24b3754e-f7bc-44a9-8e21-2968615d1f8a
+		summarizeBy: none
+		sourceColumn: puuid
+
+		annotation SummarizationSetBy = Automatic
+
+	column summoner_id
+		dataType: string
+		lineageTag: 044f5eda-01c3-4b03-af20-684c4ad916b2
+		summarizeBy: none
+		sourceColumn: summoner_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column account_id
+		dataType: string
+		lineageTag: e36f9b4f-2363-46c7-90a5-28af57f68939
+		summarizeBy: none
+		sourceColumn: account_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column summoner_name
+		dataType: string
+		lineageTag: 4a1e576f-5c74-4cdd-8755-d3eb6590dc3c
+		summarizeBy: none
+		sourceColumn: summoner_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column riot_id_game_name
+		dataType: string
+		lineageTag: b7d95432-d599-46fd-91d1-b56f1db1450a
+		summarizeBy: none
+		sourceColumn: riot_id_game_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column riot_id_tagline
+		dataType: string
+		lineageTag: 3b9f5edc-fa4a-4c73-a542-060dc55b3dc7
+		summarizeBy: none
+		sourceColumn: riot_id_tagline
+
+		annotation SummarizationSetBy = Automatic
+
+	column profile_icon_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 4f36b9f9-0eb4-4c48-8df0-6b922fcf6dbe
+		summarizeBy: sum
+		sourceColumn: profile_icon_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column revision_date
+		dataType: int64
+		formatString: 0
+		lineageTag: 1c51a15d-83b3-441d-badb-394106ea05ca
+		summarizeBy: sum
+		sourceColumn: revision_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column summoner_level
+		dataType: int64
+		formatString: 0
+		lineageTag: ad4c917f-5493-4ea4-84d2-7976df42fda5
+		summarizeBy: sum
+		sourceColumn: summoner_level
+
+		annotation SummarizationSetBy = Automatic
+
+	column first_seen_game_date
+		dataType: string
+		lineageTag: d6884f1f-a1a9-46f6-9f68-3e18c519f22a
+		summarizeBy: none
+		sourceColumn: first_seen_game_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column last_seen_game_date
+		dataType: string
+		lineageTag: 6fa3abaf-1cde-464b-adab-52542b863743
+		summarizeBy: none
+		sourceColumn: last_seen_game_date
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_summoner = m
+		mode: import
+		source =
+				let
+				    Source = Odbc.DataSource("dsn=riot_lakehouse_athena", [HierarchicalNavigation=true]),
+				    AwsDataCatalog_Database = Source{[Name="AwsDataCatalog",Kind="Database"]}[Data],
+				    riot_lakehouse_Schema = AwsDataCatalog_Database{[Name="riot_lakehouse",Kind="Schema"]}[Data],
+				    dim_summoner_Table = riot_lakehouse_Schema{[Name="dim_summoner",Kind="Table"]}[Data]
+				in
+				    dim_summoner_Table
+
+	annotation PBI_ResultType = Table
+

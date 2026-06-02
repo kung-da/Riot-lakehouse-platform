@@ -1,0 +1,78 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "db00c8ab4a87f31a55b8",
+  "position": {
+    "x": 24,
+    "y": 196,
+    "z": 1020,
+    "width": 608,
+    "height": 220,
+    "tabOrder": 1020
+  },
+  "visual": {
+    "visualType": "clusteredBarChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_team"
+                    }
+                  },
+                  "Property": "team_side"
+                }
+              },
+              "queryRef": "dim_team.team_side",
+              "nativeQueryRef": "team_side"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_team_objective_daily_summary"
+                    }
+                  },
+                  "Property": "Total Objective Score"
+                }
+              },
+              "queryRef": "mart_team_objective_daily_summary.Total Objective Score",
+              "nativeQueryRef": "Total Objective Score"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Objective score theo side'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

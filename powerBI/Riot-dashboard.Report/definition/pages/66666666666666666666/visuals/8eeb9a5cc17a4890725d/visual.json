@@ -1,0 +1,38 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "8eeb9a5cc17a4890725d",
+  "position": {
+    "x": 524,
+    "y": 88,
+    "z": 1012,
+    "width": 232,
+    "height": 86,
+    "tabOrder": 1012
+  },
+  "visual": {
+    "visualType": "cardVisual",
+    "query": {
+      "queryState": {
+        "Data": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_timeline_events"
+                    }
+                  },
+                  "Property": "Avg Events Per Match"
+                }
+              },
+              "queryRef": "fact_timeline_events.Avg Events Per Match",
+              "nativeQueryRef": "Avg Events Per Match"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

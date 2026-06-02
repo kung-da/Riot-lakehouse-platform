@@ -1,0 +1,130 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "b8a04ed76b9e8c2aad53",
+  "position": {
+    "x": 24,
+    "y": 438,
+    "z": 1030,
+    "width": 1232,
+    "height": 250,
+    "tabOrder": 1030
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_timeline_events"
+                    }
+                  },
+                  "Property": "event_type"
+                }
+              },
+              "queryRef": "fact_timeline_events.event_type",
+              "nativeQueryRef": "event_type"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_timeline_events"
+                    }
+                  },
+                  "Property": "lane_type"
+                }
+              },
+              "queryRef": "fact_timeline_events.lane_type",
+              "nativeQueryRef": "lane_type"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_timeline_events"
+                    }
+                  },
+                  "Property": "Timeline Events"
+                }
+              },
+              "queryRef": "fact_timeline_events.Timeline Events",
+              "nativeQueryRef": "Timeline Events"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_timeline_events"
+                    }
+                  },
+                  "Property": "Kill Events"
+                }
+              },
+              "queryRef": "fact_timeline_events.Kill Events",
+              "nativeQueryRef": "Kill Events"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_timeline_events"
+                    }
+                  },
+                  "Property": "Elite Monster Events"
+                }
+              },
+              "queryRef": "fact_timeline_events.Elite Monster Events",
+              "nativeQueryRef": "Elite Monster Events"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_timeline_events"
+                    }
+                  },
+                  "Property": "Average Event Minute"
+                }
+              },
+              "queryRef": "fact_timeline_events.Average Event Minute",
+              "nativeQueryRef": "Average Event Minute"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'B\u1ea3ng timeline events'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

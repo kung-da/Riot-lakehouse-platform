@@ -1,0 +1,38 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "2dcdd5dc207c1aa0b8d2",
+  "position": {
+    "x": 524,
+    "y": 88,
+    "z": 1012,
+    "width": 232,
+    "height": 86,
+    "tabOrder": 1012
+  },
+  "visual": {
+    "visualType": "cardVisual",
+    "query": {
+      "queryState": {
+        "Data": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_team_objective_daily_summary"
+                    }
+                  },
+                  "Property": "Avg Objective Score"
+                }
+              },
+              "queryRef": "mart_team_objective_daily_summary.Avg Objective Score",
+              "nativeQueryRef": "Avg Objective Score"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

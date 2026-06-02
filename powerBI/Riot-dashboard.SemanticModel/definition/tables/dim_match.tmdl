@@ -1,0 +1,127 @@
+table dim_match
+	lineageTag: c5fee270-71f2-4cb1-ac40-d18e6290b91f
+
+	column match_id
+		dataType: string
+		lineageTag: 59052ca7-c188-4662-907a-5aaed106d169
+		summarizeBy: none
+		sourceColumn: match_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column game_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 9ef797de-9a62-4309-8704-d693ff4f24b8
+		summarizeBy: sum
+		sourceColumn: game_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column platform_id
+		dataType: string
+		lineageTag: 3b7dbc69-a1cd-4740-9e29-4e7edcf241a7
+		summarizeBy: none
+		sourceColumn: platform_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column queue_id
+		dataType: int64
+		formatString: 0
+		lineageTag: ad5c03f4-3592-4625-a9da-ebd912d23239
+		summarizeBy: sum
+		sourceColumn: queue_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column game_mode
+		dataType: string
+		lineageTag: 87e0b4c1-0b1a-4512-9c87-e223fc0831e8
+		summarizeBy: none
+		sourceColumn: game_mode
+
+		annotation SummarizationSetBy = Automatic
+
+	column game_type
+		dataType: string
+		lineageTag: 26891453-909d-440d-86c4-9f61fda023d1
+		summarizeBy: none
+		sourceColumn: game_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column game_version
+		dataType: string
+		lineageTag: 71082f15-b2f3-48f2-b5e0-70dd0fb4d1c0
+		summarizeBy: none
+		sourceColumn: game_version
+
+		annotation SummarizationSetBy = Automatic
+
+	column game_creation
+		dataType: int64
+		formatString: 0
+		lineageTag: a249351d-c466-4e0a-99af-46a718e42944
+		summarizeBy: sum
+		sourceColumn: game_creation
+
+		annotation SummarizationSetBy = Automatic
+
+	column game_start_timestamp
+		dataType: int64
+		formatString: 0
+		lineageTag: 7010ab97-bc19-4a49-94e9-947afdbf8fce
+		summarizeBy: sum
+		sourceColumn: game_start_timestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	column game_end_timestamp
+		dataType: int64
+		formatString: 0
+		lineageTag: 650d8087-3093-4930-abe0-ef944e405612
+		summarizeBy: sum
+		sourceColumn: game_end_timestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	column game_duration
+		dataType: int64
+		formatString: 0
+		lineageTag: 5be0b7d8-ef57-4d97-85e1-f1f6d55ff7ea
+		summarizeBy: sum
+		sourceColumn: game_duration
+
+		annotation SummarizationSetBy = Automatic
+
+	column participant_count
+		dataType: int64
+		formatString: 0
+		lineageTag: 187d053d-7b45-49bc-a116-220686c81813
+		summarizeBy: sum
+		sourceColumn: participant_count
+
+		annotation SummarizationSetBy = Automatic
+
+	column game_date
+		dataType: string
+		lineageTag: 6faed744-2c04-4cef-b3b4-8a485fff8524
+		summarizeBy: none
+		sourceColumn: game_date
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_match = m
+		mode: import
+		source =
+				let
+				    Source = Odbc.DataSource("dsn=riot_lakehouse_athena", [HierarchicalNavigation=true]),
+				    AwsDataCatalog_Database = Source{[Name="AwsDataCatalog",Kind="Database"]}[Data],
+				    riot_lakehouse_Schema = AwsDataCatalog_Database{[Name="riot_lakehouse",Kind="Schema"]}[Data],
+				    dim_match_Table = riot_lakehouse_Schema{[Name="dim_match",Kind="Table"]}[Data]
+				in
+				    dim_match_Table
+
+	annotation PBI_ResultType = Table
+

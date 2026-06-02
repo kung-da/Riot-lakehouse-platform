@@ -1,0 +1,38 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "0fa99690f443c56df852",
+  "position": {
+    "x": 24,
+    "y": 88,
+    "z": 1010,
+    "width": 232,
+    "height": 86,
+    "tabOrder": 1010
+  },
+  "visual": {
+    "visualType": "cardVisual",
+    "query": {
+      "queryState": {
+        "Data": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_champion_daily_performance"
+                    }
+                  },
+                  "Property": "Champion Matches"
+                }
+              },
+              "queryRef": "mart_champion_daily_performance.Champion Matches",
+              "nativeQueryRef": "Champion Matches"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

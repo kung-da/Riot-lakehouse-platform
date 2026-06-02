@@ -1,0 +1,192 @@
+table fact_participant_performance
+	lineageTag: 2037b554-c0d8-45ec-89e4-a748bc631dba
+
+	column match_id
+		dataType: string
+		lineageTag: e96621f7-ebf1-4a3c-b29d-d3b895daf88e
+		summarizeBy: none
+		sourceColumn: match_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column participant_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 0b9f0dff-53ec-413e-ba18-8aa3827a0d31
+		summarizeBy: sum
+		sourceColumn: participant_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column puuid
+		dataType: string
+		lineageTag: a5321141-b016-49f4-9c28-c49d46ed46c3
+		summarizeBy: none
+		sourceColumn: puuid
+
+		annotation SummarizationSetBy = Automatic
+
+	column summoner_id
+		dataType: string
+		lineageTag: 81c56d25-2d6c-40d6-b3be-0423b6d0fe34
+		summarizeBy: none
+		sourceColumn: summoner_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column champion_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 4339d1a0-ee1c-4a02-9671-4717ef1b7663
+		summarizeBy: none
+		sourceColumn: champion_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column team_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 2becaaaa-306f-47f5-b35a-c134baa75b51
+		summarizeBy: none
+		sourceColumn: team_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column team_position
+		dataType: string
+		lineageTag: f4a4de36-25b0-404b-af31-10bffa463cf9
+		summarizeBy: none
+		sourceColumn: team_position
+
+		annotation SummarizationSetBy = Automatic
+
+	column win
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 8a449573-ef27-4df7-9a1b-17711f8ef782
+		summarizeBy: none
+		sourceColumn: win
+
+		annotation SummarizationSetBy = Automatic
+
+	column kills
+		dataType: int64
+		formatString: 0
+		lineageTag: f41b321b-f102-4806-a543-2597b45640de
+		summarizeBy: sum
+		sourceColumn: kills
+
+		annotation SummarizationSetBy = Automatic
+
+	column deaths
+		dataType: int64
+		formatString: 0
+		lineageTag: 1a6ceee3-b33f-4a88-bf1a-e981a76c1f7e
+		summarizeBy: sum
+		sourceColumn: deaths
+
+		annotation SummarizationSetBy = Automatic
+
+	column assists
+		dataType: int64
+		formatString: 0
+		lineageTag: 39bc810a-125a-4289-af00-11069e0bec04
+		summarizeBy: sum
+		sourceColumn: assists
+
+		annotation SummarizationSetBy = Automatic
+
+	column kda
+		dataType: double
+		lineageTag: 38a8e1b1-2932-4e6e-b03c-8c18824888e5
+		summarizeBy: sum
+		sourceColumn: kda
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column gold_earned
+		dataType: int64
+		formatString: 0
+		lineageTag: a8571c89-a6a1-44cc-aa1c-b9c3906f87cf
+		summarizeBy: sum
+		sourceColumn: gold_earned
+
+		annotation SummarizationSetBy = Automatic
+
+	column total_damage_dealt_to_champions
+		dataType: int64
+		formatString: 0
+		lineageTag: a23ac435-f895-4a88-94cf-7e5e65a79e0c
+		summarizeBy: sum
+		sourceColumn: total_damage_dealt_to_champions
+
+		annotation SummarizationSetBy = Automatic
+
+	column total_damage_taken
+		dataType: int64
+		formatString: 0
+		lineageTag: 44fbfc48-cc12-45c9-ba72-694bc34bc2ae
+		summarizeBy: sum
+		sourceColumn: total_damage_taken
+
+		annotation SummarizationSetBy = Automatic
+
+	column vision_score
+		dataType: int64
+		formatString: 0
+		lineageTag: d44a587c-06e4-4908-8c95-b139a0a96898
+		summarizeBy: sum
+		sourceColumn: vision_score
+
+		annotation SummarizationSetBy = Automatic
+
+	column total_minions_killed
+		dataType: int64
+		formatString: 0
+		lineageTag: e49a69c3-04bf-4454-ba7d-c67851324ae4
+		summarizeBy: sum
+		sourceColumn: total_minions_killed
+
+		annotation SummarizationSetBy = Automatic
+
+	column neutral_minions_killed
+		dataType: int64
+		formatString: 0
+		lineageTag: 421e9a51-ae24-4da7-a581-3cb055f9d794
+		summarizeBy: sum
+		sourceColumn: neutral_minions_killed
+
+		annotation SummarizationSetBy = Automatic
+
+	column cs
+		dataType: int64
+		formatString: 0
+		lineageTag: 500982f8-21e2-4e1c-bcb5-86ec9e7815ca
+		summarizeBy: sum
+		sourceColumn: cs
+
+		annotation SummarizationSetBy = Automatic
+
+	column game_date
+		dataType: string
+		lineageTag: 7cb2f10f-6420-46c0-bcb3-33c2ce6a3a4f
+		summarizeBy: none
+		sourceColumn: game_date
+
+		annotation SummarizationSetBy = Automatic
+
+	partition fact_participant_performance = m
+		mode: import
+		source =
+				let
+				    Source = Odbc.DataSource("dsn=riot_lakehouse_athena", [HierarchicalNavigation=true]),
+				    AwsDataCatalog_Database = Source{[Name="AwsDataCatalog",Kind="Database"]}[Data],
+				    riot_lakehouse_Schema = AwsDataCatalog_Database{[Name="riot_lakehouse",Kind="Schema"]}[Data],
+				    fact_participant_performance_Table = riot_lakehouse_Schema{[Name="fact_participant_performance",Kind="Table"]}[Data]
+				in
+				    fact_participant_performance_Table
+
+	annotation PBI_ResultType = Table
+

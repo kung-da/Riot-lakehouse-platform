@@ -1,0 +1,370 @@
+table mart_champion_daily_performance
+	lineageTag: 9a007d90-7c45-4733-8c3d-f962342cb17c
+
+	measure 'Champion Matches' = SUM('mart_champion_daily_performance'[matches_played])
+		lineageTag: 8e8d1b51-3e11-4cdc-8e77-e69c9547ceb3
+
+	measure 'Champion Unique Players' = SUM('mart_champion_daily_performance'[unique_players])
+		lineageTag: a018e7f4-868a-46a8-8072-c41e159c7300
+
+	measure 'Champion Wins' = SUM('mart_champion_daily_performance'[wins])
+		lineageTag: aa67cbd5-7a65-4c67-87cf-1bb378502f5e
+
+	measure 'Champion Losses' = SUM('mart_champion_daily_performance'[losses])
+		lineageTag: 09d06800-4eae-4db0-a9c4-670f80bb1c3f
+
+	measure 'Champion Win Rate' = DIVIDE([Champion Wins], [Champion Matches])
+		lineageTag: 7c7b8eb3-b8de-4617-a4ad-cfb6c5c4cf11
+
+	measure 'Champion Pick Rate' =
+			DIVIDE(
+			    [Champion Matches],
+			    CALCULATE([Champion Matches], ALL('dim_champion'))
+			)
+		lineageTag: a7400bd6-7207-41b6-b5c4-a42a0b2a4276
+
+	measure 'Champion Total Kills' = SUM('mart_champion_daily_performance'[total_kills])
+		lineageTag: e2664466-e0ef-4aa6-bde9-6dd1707b012e
+
+	measure 'Champion Total Deaths' = SUM('mart_champion_daily_performance'[total_deaths])
+		lineageTag: 8c8fc80e-51d2-43c5-8ed5-0a22cf46d6cd
+
+	measure 'Champion Total Assists' = SUM('mart_champion_daily_performance'[total_assists])
+		lineageTag: eff5a03f-e21d-4db9-8285-7dad25e526ad
+
+	measure 'Champion Kill Share' =
+			DIVIDE(
+			    [Champion Total Kills],
+			    CALCULATE([Champion Total Kills], ALL('dim_champion'))
+			)
+		lineageTag: 04b67790-e43e-43f3-80c4-a902862d5228
+
+	measure 'Champion Avg Kills' =
+			DIVIDE(
+			    SUMX(
+			        'mart_champion_daily_performance',
+			        'mart_champion_daily_performance'[avg_kills]
+			            * 'mart_champion_daily_performance'[matches_played]
+			    ),
+			    [Champion Matches]
+			)
+		lineageTag: 88360c7c-4a27-4afe-9a3f-c742331cab8b
+
+	measure 'Champion Avg Deaths' =
+			DIVIDE(
+			    SUMX(
+			        'mart_champion_daily_performance',
+			        'mart_champion_daily_performance'[avg_deaths]
+			            * 'mart_champion_daily_performance'[matches_played]
+			    ),
+			    [Champion Matches]
+			)
+		lineageTag: 39e1428a-9624-46b6-93aa-498a9826d466
+
+	measure 'Champion Avg Assists' =
+			DIVIDE(
+			    SUMX(
+			        'mart_champion_daily_performance',
+			        'mart_champion_daily_performance'[avg_assists]
+			            * 'mart_champion_daily_performance'[matches_played]
+			    ),
+			    [Champion Matches]
+			)
+		lineageTag: 54f1dc23-ff59-47dc-926a-5d3f0e56f66f
+
+	measure 'Champion Avg KDA' =
+			DIVIDE(
+			    SUMX(
+			        'mart_champion_daily_performance',
+			        'mart_champion_daily_performance'[avg_kda]
+			            * 'mart_champion_daily_performance'[matches_played]
+			    ),
+			    [Champion Matches]
+			)
+		lineageTag: d15546f9-8aec-439a-be0b-be411112bc56
+
+	measure 'Champion Avg Gold Earned' =
+			DIVIDE(
+			    SUMX(
+			        'mart_champion_daily_performance',
+			        'mart_champion_daily_performance'[avg_gold_earned]
+			            * 'mart_champion_daily_performance'[matches_played]
+			    ),
+			    [Champion Matches]
+			)
+		lineageTag: b2840d10-0ea7-4bb6-9e61-433c945c9eed
+
+	measure 'Champion Avg Damage To Champions' =
+			DIVIDE(
+			    SUMX(
+			        'mart_champion_daily_performance',
+			        'mart_champion_daily_performance'[avg_damage_dealt_to_champions]
+			            * 'mart_champion_daily_performance'[matches_played]
+			    ),
+			    [Champion Matches]
+			)
+		lineageTag: 1967653d-0cb7-4ba9-970f-599c8c8cd68b
+
+	measure 'Champion Damage Share' =
+			DIVIDE(
+			    SUMX(
+			        'mart_champion_daily_performance',
+			        'mart_champion_daily_performance'[avg_damage_dealt_to_champions]
+			            * 'mart_champion_daily_performance'[matches_played]
+			    ),
+			    CALCULATE(
+			        SUMX(
+			            'mart_champion_daily_performance',
+			            'mart_champion_daily_performance'[avg_damage_dealt_to_champions]
+			                * 'mart_champion_daily_performance'[matches_played]
+			        ),
+			        ALL('dim_champion')
+			    )
+			)
+		lineageTag: 811fa681-231a-4b62-8358-ebba143398fa
+
+	measure 'Champion Avg Damage Taken' =
+			DIVIDE(
+			    SUMX(
+			        'mart_champion_daily_performance',
+			        'mart_champion_daily_performance'[avg_damage_taken]
+			            * 'mart_champion_daily_performance'[matches_played]
+			    ),
+			    [Champion Matches]
+			)
+		lineageTag: 8ac756e5-0264-4bf9-a094-b6cfbc595852
+
+	measure 'Champion Avg Vision Score' =
+			DIVIDE(
+			    SUMX(
+			        'mart_champion_daily_performance',
+			        'mart_champion_daily_performance'[avg_vision_score]
+			            * 'mart_champion_daily_performance'[matches_played]
+			    ),
+			    [Champion Matches]
+			)
+		lineageTag: f0d88f08-6f14-4052-b735-01d3026faf67
+
+	measure 'Champion Avg CS' =
+			DIVIDE(
+			    SUMX(
+			        'mart_champion_daily_performance',
+			        'mart_champion_daily_performance'[avg_cs]
+			            * 'mart_champion_daily_performance'[matches_played]
+			    ),
+			    [Champion Matches]
+			)
+		lineageTag: 55f3c46a-d4ef-4ae9-805c-4780c0dd284a
+
+	measure 'Champion Meta Score' =
+			VAR PickComponent = [Champion Pick Rate]
+			VAR WinComponent = [Champion Win Rate]
+			VAR KdaBaseline = CALCULATE([Champion Avg KDA], ALL('dim_champion'))
+			VAR KdaComponent = DIVIDE([Champion Avg KDA], KdaBaseline)
+			RETURN
+			    (PickComponent * 0.45)
+			        + (WinComponent * 0.35)
+			        + (KdaComponent * 0.20)
+		lineageTag: 8afbaef5-eb23-4a51-bae5-e7baf6462b0a
+
+	column champion_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 89b58c9e-6ad2-4ba2-a309-4762f8df1b62
+		summarizeBy: none
+		sourceColumn: champion_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column champion_name
+		dataType: string
+		lineageTag: cf9cda7d-1369-4867-9b9a-f8eb4e0df388
+		summarizeBy: none
+		sourceColumn: champion_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column matches_played
+		dataType: int64
+		formatString: 0
+		lineageTag: 2987a967-ce60-4829-8388-516c538ffdb5
+		summarizeBy: sum
+		sourceColumn: matches_played
+
+		annotation SummarizationSetBy = Automatic
+
+	column unique_players
+		dataType: int64
+		formatString: 0
+		lineageTag: 4b8b1e5f-410f-4901-8391-c56e0f655f63
+		summarizeBy: sum
+		sourceColumn: unique_players
+
+		annotation SummarizationSetBy = Automatic
+
+	column wins
+		dataType: int64
+		formatString: 0
+		lineageTag: 811dc564-310d-409e-b5d5-67041118ef1a
+		summarizeBy: sum
+		sourceColumn: wins
+
+		annotation SummarizationSetBy = Automatic
+
+	column losses
+		dataType: int64
+		formatString: 0
+		lineageTag: 94a508da-ae6b-4f73-80f6-f90d991f6b8e
+		summarizeBy: sum
+		sourceColumn: losses
+
+		annotation SummarizationSetBy = Automatic
+
+	column win_rate
+		dataType: double
+		lineageTag: ec3c18ca-950e-48c2-97e3-ca93ca9031c3
+		summarizeBy: sum
+		sourceColumn: win_rate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column total_kills
+		dataType: int64
+		formatString: 0
+		lineageTag: 4bd1b6e9-75ed-42a8-9d5c-4239d25f676e
+		summarizeBy: sum
+		sourceColumn: total_kills
+
+		annotation SummarizationSetBy = Automatic
+
+	column total_deaths
+		dataType: int64
+		formatString: 0
+		lineageTag: 09e8d9f0-7da3-400f-b46a-c2b560274a79
+		summarizeBy: sum
+		sourceColumn: total_deaths
+
+		annotation SummarizationSetBy = Automatic
+
+	column total_assists
+		dataType: int64
+		formatString: 0
+		lineageTag: b73d3082-1e38-4e9c-85f0-82c96573ed48
+		summarizeBy: sum
+		sourceColumn: total_assists
+
+		annotation SummarizationSetBy = Automatic
+
+	column avg_kills
+		dataType: double
+		lineageTag: f17e6fd1-5c66-4a06-a766-79624d38d8c3
+		summarizeBy: sum
+		sourceColumn: avg_kills
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column avg_deaths
+		dataType: double
+		lineageTag: 7ebcd641-8bb3-4985-92ac-04c30a633c35
+		summarizeBy: sum
+		sourceColumn: avg_deaths
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column avg_assists
+		dataType: double
+		lineageTag: 7bd876ea-a91a-4d05-9d18-4b858be51d89
+		summarizeBy: sum
+		sourceColumn: avg_assists
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column avg_kda
+		dataType: double
+		lineageTag: 010faac7-ce89-46b6-be60-0e5cd47e9da5
+		summarizeBy: sum
+		sourceColumn: avg_kda
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column avg_gold_earned
+		dataType: double
+		lineageTag: c8ff5025-2132-4038-b724-af02fba8a74a
+		summarizeBy: sum
+		sourceColumn: avg_gold_earned
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column avg_damage_dealt_to_champions
+		dataType: double
+		lineageTag: 2da47d0f-6c73-4087-86fc-2d51b00682b9
+		summarizeBy: sum
+		sourceColumn: avg_damage_dealt_to_champions
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column avg_damage_taken
+		dataType: double
+		lineageTag: e8bf7923-4045-40e7-8229-eca377e24e49
+		summarizeBy: sum
+		sourceColumn: avg_damage_taken
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column avg_vision_score
+		dataType: double
+		lineageTag: f6c72c3e-2a63-444d-b736-44e8f9838971
+		summarizeBy: sum
+		sourceColumn: avg_vision_score
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column avg_cs
+		dataType: double
+		lineageTag: 47115386-a1e2-417b-b495-c53df7ccea17
+		summarizeBy: sum
+		sourceColumn: avg_cs
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column game_date
+		dataType: string
+		lineageTag: 729c1d09-5514-4b52-a894-0851bae14737
+		summarizeBy: none
+		sourceColumn: game_date
+
+		annotation SummarizationSetBy = Automatic
+
+	partition mart_champion_daily_performance = m
+		mode: import
+		source =
+				let
+				    Source = Odbc.DataSource("dsn=riot_lakehouse_athena", [HierarchicalNavigation=true]),
+				    AwsDataCatalog_Database = Source{[Name="AwsDataCatalog",Kind="Database"]}[Data],
+				    riot_lakehouse_Schema = AwsDataCatalog_Database{[Name="riot_lakehouse",Kind="Schema"]}[Data],
+				    mart_champion_daily_performance_Table = riot_lakehouse_Schema{[Name="mart_champion_daily_performance",Kind="Table"]}[Data]
+				in
+				    mart_champion_daily_performance_Table
+
+	annotation PBI_ResultType = Table
+

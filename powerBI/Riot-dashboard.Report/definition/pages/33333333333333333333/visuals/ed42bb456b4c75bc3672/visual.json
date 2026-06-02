@@ -1,0 +1,130 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "ed42bb456b4c75bc3672",
+  "position": {
+    "x": 24,
+    "y": 438,
+    "z": 1030,
+    "width": 1232,
+    "height": 250,
+    "tabOrder": 1030
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_role_daily_performance"
+                    }
+                  },
+                  "Property": "team_position"
+                }
+              },
+              "queryRef": "mart_role_daily_performance.team_position",
+              "nativeQueryRef": "team_position"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_role_daily_performance"
+                    }
+                  },
+                  "Property": "Role Matches"
+                }
+              },
+              "queryRef": "mart_role_daily_performance.Role Matches",
+              "nativeQueryRef": "Role Matches"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_role_daily_performance"
+                    }
+                  },
+                  "Property": "Role Win Rate"
+                }
+              },
+              "queryRef": "mart_role_daily_performance.Role Win Rate",
+              "nativeQueryRef": "Role Win Rate"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_role_daily_performance"
+                    }
+                  },
+                  "Property": "Role Avg KDA"
+                }
+              },
+              "queryRef": "mart_role_daily_performance.Role Avg KDA",
+              "nativeQueryRef": "Role Avg KDA"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_role_daily_performance"
+                    }
+                  },
+                  "Property": "Role Avg Damage To Champions"
+                }
+              },
+              "queryRef": "mart_role_daily_performance.Role Avg Damage To Champions",
+              "nativeQueryRef": "Role Avg Damage To Champions"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_role_daily_performance"
+                    }
+                  },
+                  "Property": "Role Avg Vision Score"
+                }
+              },
+              "queryRef": "mart_role_daily_performance.Role Avg Vision Score",
+              "nativeQueryRef": "Role Avg Vision Score"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'B\u1ea3ng role/lane'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

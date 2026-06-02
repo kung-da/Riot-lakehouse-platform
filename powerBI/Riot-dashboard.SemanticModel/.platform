@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SemanticModel",
+    "displayName": "Riot-dashboard"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "f322b060-8378-4734-a31d-8c87827cd0b6"
+  }
+}

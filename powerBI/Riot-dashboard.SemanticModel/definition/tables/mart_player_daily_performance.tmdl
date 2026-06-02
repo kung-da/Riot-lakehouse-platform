@@ -1,0 +1,362 @@
+table mart_player_daily_performance
+	lineageTag: 0c59b83f-8b8c-487c-a684-7ecbc56ba41c
+
+	measure 'Selected Player Label' =
+			COALESCE(
+			    SELECTEDVALUE('dim_summoner'[riot_id_game_name]),
+			    SELECTEDVALUE('dim_summoner'[summoner_name]),
+			    SELECTEDVALUE('dim_summoner'[puuid]),
+			    "All players"
+			)
+		lineageTag: 870c220b-846f-42f5-99a6-364c43bc4747
+
+	measure 'Player Matches' = SUM('mart_player_daily_performance'[matches_played])
+		lineageTag: e6574bbc-24f6-4d0a-aecb-a1473f13c266
+
+	measure 'Player Wins' = SUM('mart_player_daily_performance'[wins])
+		lineageTag: 6e40f5e8-4a6f-4d4c-bf75-c0622b032a32
+
+	measure 'Player Losses' = SUM('mart_player_daily_performance'[losses])
+		lineageTag: d161f7ef-ba73-4ef1-b0fd-5917eb30911b
+
+	measure 'Player Win Rate' = DIVIDE([Player Wins], [Player Matches])
+		lineageTag: 56922cff-3344-456a-ab76-0e5163e86d65
+
+	measure 'Player Total Kills' = SUM('mart_player_daily_performance'[total_kills])
+		lineageTag: 4519154b-45a7-4236-8ce2-0abd8e483ec5
+
+	measure 'Player Total Deaths' = SUM('mart_player_daily_performance'[total_deaths])
+		lineageTag: d076ce57-7695-483d-9117-a835151fa52a
+
+	measure 'Player Total Assists' = SUM('mart_player_daily_performance'[total_assists])
+		lineageTag: 8021858d-e0b0-4f99-8876-27f0fac5fb86
+
+	measure 'Player KDA Ratio' = DIVIDE([Player Total Kills] + [Player Total Assists], [Player Total Deaths])
+		lineageTag: f071f630-bd77-493b-b938-f3f454b06b5d
+
+	measure 'Player Unique Champions' = SUM('mart_player_daily_performance'[unique_champions])
+		lineageTag: 2266d8f2-94f3-4f4e-8c93-4d617e43006a
+
+	measure 'Player Avg Kills' =
+			DIVIDE(
+			    SUMX(
+			        'mart_player_daily_performance',
+			        'mart_player_daily_performance'[avg_kills]
+			            * 'mart_player_daily_performance'[matches_played]
+			    ),
+			    [Player Matches]
+			)
+		lineageTag: b6effffe-a65c-491d-b71e-a9a5a2a8e853
+
+	measure 'Player Avg Deaths' =
+			DIVIDE(
+			    SUMX(
+			        'mart_player_daily_performance',
+			        'mart_player_daily_performance'[avg_deaths]
+			            * 'mart_player_daily_performance'[matches_played]
+			    ),
+			    [Player Matches]
+			)
+		lineageTag: 35616712-0e54-4cba-8922-5cec58781354
+
+	measure 'Player Avg Assists' =
+			DIVIDE(
+			    SUMX(
+			        'mart_player_daily_performance',
+			        'mart_player_daily_performance'[avg_assists]
+			            * 'mart_player_daily_performance'[matches_played]
+			    ),
+			    [Player Matches]
+			)
+		lineageTag: df095c0d-f7a0-4836-99df-f5e6e3ab7e28
+
+	measure 'Player Avg KDA' =
+			DIVIDE(
+			    SUMX(
+			        'mart_player_daily_performance',
+			        'mart_player_daily_performance'[avg_kda]
+			            * 'mart_player_daily_performance'[matches_played]
+			    ),
+			    [Player Matches]
+			)
+		lineageTag: 05cb80e4-e57a-446d-8aaf-2757223ea401
+
+	measure 'Player Avg Gold Earned' =
+			DIVIDE(
+			    SUMX(
+			        'mart_player_daily_performance',
+			        'mart_player_daily_performance'[avg_gold_earned]
+			            * 'mart_player_daily_performance'[matches_played]
+			    ),
+			    [Player Matches]
+			)
+		lineageTag: abb4f0a1-53aa-45d4-ba38-6d2649338371
+
+	measure 'Player Avg Damage To Champions' =
+			DIVIDE(
+			    SUMX(
+			        'mart_player_daily_performance',
+			        'mart_player_daily_performance'[avg_damage_dealt_to_champions]
+			            * 'mart_player_daily_performance'[matches_played]
+			    ),
+			    [Player Matches]
+			)
+		lineageTag: e4d41783-2188-4b20-b1df-f643f0c1aa91
+
+	measure 'Player Avg Damage Taken' =
+			DIVIDE(
+			    SUMX(
+			        'mart_player_daily_performance',
+			        'mart_player_daily_performance'[avg_damage_taken]
+			            * 'mart_player_daily_performance'[matches_played]
+			    ),
+			    [Player Matches]
+			)
+		lineageTag: b5b1afbb-6eda-4ef0-810b-ab103489333d
+
+	measure 'Player Avg Vision Score' =
+			DIVIDE(
+			    SUMX(
+			        'mart_player_daily_performance',
+			        'mart_player_daily_performance'[avg_vision_score]
+			            * 'mart_player_daily_performance'[matches_played]
+			    ),
+			    [Player Matches]
+			)
+		lineageTag: dabbb404-61e3-4670-b956-e06c47047af5
+
+	measure 'Player Avg CS' =
+			DIVIDE(
+			    SUMX(
+			        'mart_player_daily_performance',
+			        'mart_player_daily_performance'[avg_cs]
+			            * 'mart_player_daily_performance'[matches_played]
+			    ),
+			    [Player Matches]
+			)
+		lineageTag: 43e86d9c-23f5-4680-887a-4d6f2bc06156
+
+	column puuid
+		dataType: string
+		lineageTag: a9e6d33e-7d94-4119-9d79-12770c7fe928
+		summarizeBy: none
+		sourceColumn: puuid
+
+		annotation SummarizationSetBy = Automatic
+
+	column summoner_id
+		dataType: string
+		lineageTag: e440df53-a8cb-42ff-be06-6c138a5d6dff
+		summarizeBy: none
+		sourceColumn: summoner_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column summoner_name
+		dataType: string
+		lineageTag: ec1c5469-837f-4aed-aa8b-01223545b874
+		summarizeBy: none
+		sourceColumn: summoner_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column riot_id_game_name
+		dataType: string
+		lineageTag: 820e9a73-f2ab-45d1-aadf-382f128ed0d0
+		summarizeBy: none
+		sourceColumn: riot_id_game_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column riot_id_tagline
+		dataType: string
+		lineageTag: 0cf93783-17e8-4687-aca3-5118ccdf6dc9
+		summarizeBy: none
+		sourceColumn: riot_id_tagline
+
+		annotation SummarizationSetBy = Automatic
+
+	column matches_played
+		dataType: int64
+		formatString: 0
+		lineageTag: f5ff6b45-f6fd-421e-9d24-72cde9925a2b
+		summarizeBy: sum
+		sourceColumn: matches_played
+
+		annotation SummarizationSetBy = Automatic
+
+	column wins
+		dataType: int64
+		formatString: 0
+		lineageTag: 70e655fb-3748-4313-839b-7f396fc986b0
+		summarizeBy: sum
+		sourceColumn: wins
+
+		annotation SummarizationSetBy = Automatic
+
+	column losses
+		dataType: int64
+		formatString: 0
+		lineageTag: 0f8927d8-bcb7-4d5a-b9fd-d6d93d586673
+		summarizeBy: sum
+		sourceColumn: losses
+
+		annotation SummarizationSetBy = Automatic
+
+	column win_rate
+		dataType: double
+		lineageTag: cd3cd18f-cb2c-41f7-9046-5ed6c0f78e97
+		summarizeBy: sum
+		sourceColumn: win_rate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column unique_champions
+		dataType: int64
+		formatString: 0
+		lineageTag: 2fe4625b-839c-4de1-a86c-5cbb4a0cc60f
+		summarizeBy: sum
+		sourceColumn: unique_champions
+
+		annotation SummarizationSetBy = Automatic
+
+	column total_kills
+		dataType: int64
+		formatString: 0
+		lineageTag: d60ee911-2c91-494c-9671-699fdeddda97
+		summarizeBy: sum
+		sourceColumn: total_kills
+
+		annotation SummarizationSetBy = Automatic
+
+	column total_deaths
+		dataType: int64
+		formatString: 0
+		lineageTag: 84e0eaf9-0b59-420f-ae1d-a79a1db36fa9
+		summarizeBy: sum
+		sourceColumn: total_deaths
+
+		annotation SummarizationSetBy = Automatic
+
+	column total_assists
+		dataType: int64
+		formatString: 0
+		lineageTag: e7dc5c7b-8d87-4a16-894c-53a601cace6a
+		summarizeBy: sum
+		sourceColumn: total_assists
+
+		annotation SummarizationSetBy = Automatic
+
+	column avg_kills
+		dataType: double
+		lineageTag: 4fc843a4-6352-43be-96c7-5c225450a6af
+		summarizeBy: sum
+		sourceColumn: avg_kills
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column avg_deaths
+		dataType: double
+		lineageTag: e5f2adf5-92b7-439d-b4a1-408abf79e655
+		summarizeBy: sum
+		sourceColumn: avg_deaths
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column avg_assists
+		dataType: double
+		lineageTag: 4c6e91c0-1540-4889-bdb4-8fa11556631b
+		summarizeBy: sum
+		sourceColumn: avg_assists
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column avg_kda
+		dataType: double
+		lineageTag: 5b3f6abe-520f-41c7-b87f-3c39d77aac62
+		summarizeBy: sum
+		sourceColumn: avg_kda
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column avg_gold_earned
+		dataType: double
+		lineageTag: f80a8e91-cdb3-478c-a1a4-83362b1c884d
+		summarizeBy: sum
+		sourceColumn: avg_gold_earned
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column avg_damage_dealt_to_champions
+		dataType: double
+		lineageTag: b8801199-b615-47e9-a1a5-d46260df0c0d
+		summarizeBy: sum
+		sourceColumn: avg_damage_dealt_to_champions
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column avg_damage_taken
+		dataType: double
+		lineageTag: 344d5bb0-da20-47ac-91a8-b132dd5ce3e7
+		summarizeBy: sum
+		sourceColumn: avg_damage_taken
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column avg_vision_score
+		dataType: double
+		lineageTag: d9b3b41a-73ef-4ed6-af24-69191a62c7a0
+		summarizeBy: sum
+		sourceColumn: avg_vision_score
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column avg_cs
+		dataType: double
+		lineageTag: 8cd39e9d-57a3-4301-8b1e-9685f504e0ec
+		summarizeBy: sum
+		sourceColumn: avg_cs
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column game_date
+		dataType: string
+		lineageTag: 4c824926-b830-439f-8f27-691e63739539
+		summarizeBy: none
+		sourceColumn: game_date
+
+		annotation SummarizationSetBy = Automatic
+
+	partition mart_player_daily_performance = m
+		mode: import
+		source =
+				let
+				    Source = Odbc.DataSource("dsn=riot_lakehouse_athena", [HierarchicalNavigation=true]),
+				    AwsDataCatalog_Database = Source{[Name="AwsDataCatalog",Kind="Database"]}[Data],
+				    riot_lakehouse_Schema = AwsDataCatalog_Database{[Name="riot_lakehouse",Kind="Schema"]}[Data],
+				    mart_player_daily_performance_Table = riot_lakehouse_Schema{[Name="mart_player_daily_performance",Kind="Table"]}[Data]
+				in
+				    mart_player_daily_performance_Table
+
+	annotation PBI_ResultType = Table
+

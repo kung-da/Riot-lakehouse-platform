@@ -1,0 +1,130 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "729b769c237e25b85561",
+  "position": {
+    "x": 24,
+    "y": 438,
+    "z": 1030,
+    "width": 1232,
+    "height": 250,
+    "tabOrder": 1030
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_team"
+                    }
+                  },
+                  "Property": "team_side"
+                }
+              },
+              "queryRef": "dim_team.team_side",
+              "nativeQueryRef": "team_side"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_team_objective_daily_summary"
+                    }
+                  },
+                  "Property": "Team Objective Games"
+                }
+              },
+              "queryRef": "mart_team_objective_daily_summary.Team Objective Games",
+              "nativeQueryRef": "Team Objective Games"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_team_objective_daily_summary"
+                    }
+                  },
+                  "Property": "Team Win Rate"
+                }
+              },
+              "queryRef": "mart_team_objective_daily_summary.Team Win Rate",
+              "nativeQueryRef": "Team Win Rate"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_team_objective_daily_summary"
+                    }
+                  },
+                  "Property": "Avg Dragon Kills"
+                }
+              },
+              "queryRef": "mart_team_objective_daily_summary.Avg Dragon Kills",
+              "nativeQueryRef": "Avg Dragon Kills"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_team_objective_daily_summary"
+                    }
+                  },
+                  "Property": "Avg Baron Kills"
+                }
+              },
+              "queryRef": "mart_team_objective_daily_summary.Avg Baron Kills",
+              "nativeQueryRef": "Avg Baron Kills"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_team_objective_daily_summary"
+                    }
+                  },
+                  "Property": "Avg Objective Score"
+                }
+              },
+              "queryRef": "mart_team_objective_daily_summary.Avg Objective Score",
+              "nativeQueryRef": "Avg Objective Score"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'B\u1ea3ng team objectives'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

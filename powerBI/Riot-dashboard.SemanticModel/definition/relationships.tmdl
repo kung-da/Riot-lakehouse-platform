@@ -1,0 +1,97 @@
+relationship r_fact_participant_performance_dim_champion
+	fromColumn: fact_participant_performance.champion_id
+	toColumn: dim_champion.champion_id
+
+relationship r_mart_champion_daily_performance_dim_champion
+	fromColumn: mart_champion_daily_performance.champion_id
+	toColumn: dim_champion.champion_id
+
+relationship r_dim_match_dim_date
+	isActive: false
+	fromColumn: dim_match.game_date
+	toColumn: dim_date.game_date
+
+relationship r_fact_participant_performance_dim_date
+	fromColumn: fact_participant_performance.game_date
+	toColumn: dim_date.game_date
+
+relationship r_fact_rank_snapshot_dim_date
+	fromColumn: fact_rank_snapshot.game_date
+	toColumn: dim_date.game_date
+
+relationship r_fact_team_objectives_dim_date
+	fromColumn: fact_team_objectives.game_date
+	toColumn: dim_date.game_date
+
+relationship r_fact_timeline_events_dim_date
+	fromColumn: fact_timeline_events.game_date
+	toColumn: dim_date.game_date
+
+relationship r_fact_timeline_frames_dim_date
+	fromColumn: fact_timeline_frames.game_date
+	toColumn: dim_date.game_date
+
+relationship r_mart_champion_daily_performance_dim_date
+	fromColumn: mart_champion_daily_performance.game_date
+	toColumn: dim_date.game_date
+
+relationship r_mart_player_daily_performance_dim_date
+	fromColumn: mart_player_daily_performance.game_date
+	toColumn: dim_date.game_date
+
+relationship r_mart_rank_daily_summary_dim_date
+	fromColumn: mart_rank_daily_summary.game_date
+	toColumn: dim_date.game_date
+
+relationship r_mart_role_daily_performance_dim_date
+	fromColumn: mart_role_daily_performance.game_date
+	toColumn: dim_date.game_date
+
+relationship r_mart_team_objective_daily_summary_dim_date
+	fromColumn: mart_team_objective_daily_summary.game_date
+	toColumn: dim_date.game_date
+
+relationship r_fact_participant_performance_dim_match
+	fromColumn: fact_participant_performance.match_id
+	toColumn: dim_match.match_id
+
+relationship r_fact_team_objectives_dim_match
+	fromColumn: fact_team_objectives.match_id
+	toColumn: dim_match.match_id
+
+relationship r_fact_timeline_events_dim_match
+	fromColumn: fact_timeline_events.match_id
+	toColumn: dim_match.match_id
+
+relationship r_fact_timeline_frames_dim_match
+	fromColumn: fact_timeline_frames.match_id
+	toColumn: dim_match.match_id
+
+relationship r_fact_participant_performance_dim_summoner
+	fromColumn: fact_participant_performance.puuid
+	toColumn: dim_summoner.puuid
+
+relationship r_fact_rank_snapshot_dim_summoner
+	fromColumn: fact_rank_snapshot.puuid
+	toColumn: dim_summoner.puuid
+
+relationship r_mart_player_daily_performance_dim_summoner
+	fromColumn: mart_player_daily_performance.puuid
+	toColumn: dim_summoner.puuid
+
+relationship r_fact_participant_performance_dim_team
+	fromColumn: fact_participant_performance.team_id
+	toColumn: dim_team.team_id
+
+relationship r_fact_team_objectives_dim_team
+	fromColumn: fact_team_objectives.team_id
+	toColumn: dim_team.team_id
+
+relationship r_fact_timeline_events_dim_team
+	fromColumn: fact_timeline_events.team_id
+	toColumn: dim_team.team_id
+
+relationship r_mart_team_objective_daily_summary_dim_team
+	fromColumn: mart_team_objective_daily_summary.team_id
+	toColumn: dim_team.team_id
+

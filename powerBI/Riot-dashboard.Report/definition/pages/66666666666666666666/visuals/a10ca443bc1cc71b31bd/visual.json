@@ -1,0 +1,38 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "a10ca443bc1cc71b31bd",
+  "position": {
+    "x": 24,
+    "y": 88,
+    "z": 1010,
+    "width": 232,
+    "height": 86,
+    "tabOrder": 1010
+  },
+  "visual": {
+    "visualType": "cardVisual",
+    "query": {
+      "queryState": {
+        "Data": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_timeline_events"
+                    }
+                  },
+                  "Property": "Timeline Events"
+                }
+              },
+              "queryRef": "fact_timeline_events.Timeline Events",
+              "nativeQueryRef": "Timeline Events"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

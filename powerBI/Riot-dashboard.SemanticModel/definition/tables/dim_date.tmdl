@@ -1,0 +1,134 @@
+table dim_date
+	lineageTag: 803f0728-ad62-4370-95b5-0cc9be69eaf0
+
+	measure Matches = DISTINCTCOUNT('dim_match'[match_id])
+		lineageTag: a00dd732-0a3a-4b8c-9a9d-4859416d341e
+
+	measure 'Participant Rows' = COUNTROWS('fact_participant_performance')
+		lineageTag: 33f4757c-3b08-45e3-8613-0893f37b3251
+
+	measure 'Unique Players' = DISTINCTCOUNT('fact_participant_performance'[puuid])
+		lineageTag: c6ee3ca8-d82d-4f42-a763-e7f8319f5c08
+
+	measure 'Unique Champions' = DISTINCTCOUNT('fact_participant_performance'[champion_id])
+		lineageTag: 8c2832f1-06a4-406f-a395-e8a8c2e2c655
+
+	measure 'Participant Wins' =
+			CALCULATE(
+			    [Participant Rows],
+			    'fact_participant_performance'[win] = TRUE()
+			)
+		lineageTag: fc26c03b-2706-454b-a9d7-2d520b758749
+
+	measure 'Participant Win Rate' = DIVIDE([Participant Wins], [Participant Rows])
+		lineageTag: 943e1179-8c5b-45a3-b3a7-c333b61af6cf
+
+	measure 'Total Kills' = SUM('fact_participant_performance'[kills])
+		lineageTag: 875de9e9-1dbb-44c9-b749-9ce8fd79d13c
+
+	measure 'Total Deaths' = SUM('fact_participant_performance'[deaths])
+		lineageTag: 848d5285-2163-4247-b01a-43550e9cc124
+
+	measure 'Total Assists' = SUM('fact_participant_performance'[assists])
+		lineageTag: 48825917-d0e1-4469-bfb4-40076c77a0bf
+
+	measure 'KDA Ratio' = DIVIDE([Total Kills] + [Total Assists], [Total Deaths])
+		lineageTag: 559ff9ae-c590-4c34-9942-0050226e459d
+
+	measure 'Avg KDA' = AVERAGE('fact_participant_performance'[kda])
+		lineageTag: 0a18a6ca-e5e2-401d-b806-759fa5729c1d
+
+	measure 'Avg Gold Earned' = AVERAGE('fact_participant_performance'[gold_earned])
+		lineageTag: d3739e54-9021-4ed5-a064-9cb0cb1f3f20
+
+	measure 'Avg Damage To Champions' = AVERAGE('fact_participant_performance'[total_damage_dealt_to_champions])
+		lineageTag: 79f01888-52f9-412f-b50a-5d560d46f968
+
+	measure 'Avg Damage Taken' = AVERAGE('fact_participant_performance'[total_damage_taken])
+		lineageTag: 4a2160ff-986f-4c3f-ae59-4cf8ec15a697
+
+	measure 'Avg Vision Score' = AVERAGE('fact_participant_performance'[vision_score])
+		lineageTag: 587c93ad-c0d9-4090-9037-63865b0efdaf
+
+	measure 'Avg CS' = AVERAGE('fact_participant_performance'[cs])
+		lineageTag: c9493339-e2f0-4490-8f31-6435d001141e
+
+	measure 'Avg Match Duration Minutes' = DIVIDE(AVERAGE('dim_match'[game_duration]), 60)
+		lineageTag: f3c72aed-6055-44b2-9ebd-c6f112bff21b
+
+	measure 'Selected Date Range' =
+			VAR MinDate = MIN('dim_date'[game_date])
+			VAR MaxDate = MAX('dim_date'[game_date])
+			RETURN
+			    IF(
+			        ISBLANK(MinDate) || ISBLANK(MaxDate),
+			        "No date selected",
+			        FORMAT(MinDate, "yyyy-MM-dd") & " to " & FORMAT(MaxDate, "yyyy-MM-dd")
+			    )
+		lineageTag: 85a74dee-6e1f-45ba-8c7e-1b3493157c75
+
+	column date_key
+		dataType: string
+		lineageTag: f7e9553c-7d22-4684-9437-9813183519d4
+		summarizeBy: none
+		sourceColumn: date_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column date_year
+		dataType: int64
+		formatString: 0
+		lineageTag: 58a3a004-20c0-4de7-b061-675afd451010
+		summarizeBy: sum
+		sourceColumn: date_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column date_month
+		dataType: int64
+		formatString: 0
+		lineageTag: e3062f27-31cd-4879-a9ab-d04dc0b476f4
+		summarizeBy: sum
+		sourceColumn: date_month
+
+		annotation SummarizationSetBy = Automatic
+
+	column date_day
+		dataType: int64
+		formatString: 0
+		lineageTag: dff93477-754a-43d0-a43c-c4260e2b144d
+		summarizeBy: sum
+		sourceColumn: date_day
+
+		annotation SummarizationSetBy = Automatic
+
+	column day_of_week
+		dataType: int64
+		formatString: 0
+		lineageTag: 52a46112-270a-4299-8fe1-344b0c29820f
+		summarizeBy: sum
+		sourceColumn: day_of_week
+
+		annotation SummarizationSetBy = Automatic
+
+	column game_date
+		dataType: string
+		lineageTag: 33beca93-82ae-49b9-960c-97c9488d425b
+		summarizeBy: none
+		sourceColumn: game_date
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_date = m
+		mode: import
+		source =
+				let
+				    Source = Odbc.DataSource("dsn=riot_lakehouse_athena", [HierarchicalNavigation=true]),
+				    AwsDataCatalog_Database = Source{[Name="AwsDataCatalog",Kind="Database"]}[Data],
+				    riot_lakehouse_Schema = AwsDataCatalog_Database{[Name="riot_lakehouse",Kind="Schema"]}[Data],
+				    dim_date_Table = riot_lakehouse_Schema{[Name="dim_date",Kind="Table"]}[Data]
+				in
+				    dim_date_Table
+
+	annotation PBI_ResultType = Table
+

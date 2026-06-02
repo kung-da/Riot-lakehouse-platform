@@ -1,0 +1,38 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "b93716fad35dc60ddb61",
+  "position": {
+    "x": 1024,
+    "y": 88,
+    "z": 1014,
+    "width": 232,
+    "height": 86,
+    "tabOrder": 1014
+  },
+  "visual": {
+    "visualType": "cardVisual",
+    "query": {
+      "queryState": {
+        "Data": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_rank_daily_summary"
+                    }
+                  },
+                  "Property": "Inactive Players"
+                }
+              },
+              "queryRef": "mart_rank_daily_summary.Inactive Players",
+              "nativeQueryRef": "Inactive Players"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

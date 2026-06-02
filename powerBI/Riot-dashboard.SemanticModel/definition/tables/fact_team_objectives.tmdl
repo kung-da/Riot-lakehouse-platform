@@ -1,0 +1,121 @@
+table fact_team_objectives
+	lineageTag: c53dd4a0-9d4b-4d2f-8083-9bdc2519c452
+
+	column match_id
+		dataType: string
+		lineageTag: e6ff966b-c9fa-4375-8fde-d5b4d206550e
+		summarizeBy: none
+		sourceColumn: match_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column team_id
+		dataType: int64
+		formatString: 0
+		lineageTag: d071e73f-496a-42cf-be9b-36e75fdbd375
+		summarizeBy: none
+		sourceColumn: team_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column team_side
+		dataType: string
+		lineageTag: 9dcef205-7b8e-4a88-a978-43a0d8b15d8f
+		summarizeBy: none
+		sourceColumn: team_side
+
+		annotation SummarizationSetBy = Automatic
+
+	column win
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: f7fe7c26-8fef-484d-a0d1-c6665d3b227d
+		summarizeBy: none
+		sourceColumn: win
+
+		annotation SummarizationSetBy = Automatic
+
+	column baron_kills
+		dataType: int64
+		formatString: 0
+		lineageTag: a2b995e3-150a-4245-bc96-c23d50590e1f
+		summarizeBy: sum
+		sourceColumn: baron_kills
+
+		annotation SummarizationSetBy = Automatic
+
+	column dragon_kills
+		dataType: int64
+		formatString: 0
+		lineageTag: 34e9142c-b173-43c4-a306-ee491d2cee21
+		summarizeBy: sum
+		sourceColumn: dragon_kills
+
+		annotation SummarizationSetBy = Automatic
+
+	column rift_herald_kills
+		dataType: int64
+		formatString: 0
+		lineageTag: 62a3bb61-fb14-4963-a39a-ebee8e80c4bd
+		summarizeBy: sum
+		sourceColumn: rift_herald_kills
+
+		annotation SummarizationSetBy = Automatic
+
+	column tower_kills
+		dataType: int64
+		formatString: 0
+		lineageTag: 928629f4-d493-4465-9504-ffb5597a2312
+		summarizeBy: sum
+		sourceColumn: tower_kills
+
+		annotation SummarizationSetBy = Automatic
+
+	column inhibitor_kills
+		dataType: int64
+		formatString: 0
+		lineageTag: b814704e-79e1-49d1-a3af-1c961d8a707f
+		summarizeBy: sum
+		sourceColumn: inhibitor_kills
+
+		annotation SummarizationSetBy = Automatic
+
+	column champion_kills
+		dataType: int64
+		formatString: 0
+		lineageTag: 3130ba0b-2130-4570-8150-fd26042e0278
+		summarizeBy: sum
+		sourceColumn: champion_kills
+
+		annotation SummarizationSetBy = Automatic
+
+	column objective_score
+		dataType: int64
+		formatString: 0
+		lineageTag: 8c031581-3676-4a43-9fce-14aa86b9119a
+		summarizeBy: sum
+		sourceColumn: objective_score
+
+		annotation SummarizationSetBy = Automatic
+
+	column game_date
+		dataType: string
+		lineageTag: e6fd3bb5-d08a-4ed9-b721-20fec3beef0e
+		summarizeBy: none
+		sourceColumn: game_date
+
+		annotation SummarizationSetBy = Automatic
+
+	partition fact_team_objectives = m
+		mode: import
+		source =
+				let
+				    Source = Odbc.DataSource("dsn=riot_lakehouse_athena", [HierarchicalNavigation=true]),
+				    AwsDataCatalog_Database = Source{[Name="AwsDataCatalog",Kind="Database"]}[Data],
+				    riot_lakehouse_Schema = AwsDataCatalog_Database{[Name="riot_lakehouse",Kind="Schema"]}[Data],
+				    fact_team_objectives_Table = riot_lakehouse_Schema{[Name="fact_team_objectives",Kind="Table"]}[Data]
+				in
+				    fact_team_objectives_Table
+
+	annotation PBI_ResultType = Table
+

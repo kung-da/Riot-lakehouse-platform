@@ -1,0 +1,274 @@
+table mart_team_objective_daily_summary
+	lineageTag: fec8f66a-bc61-4443-a93f-8ca91d0de0ee
+
+	measure 'Team Objective Games' = SUM('mart_team_objective_daily_summary'[games_played])
+		lineageTag: d8c2e5f3-5d00-471c-b4b6-2eb603c048b2
+
+	measure 'Team Wins' = SUM('mart_team_objective_daily_summary'[wins])
+		lineageTag: 73640bc8-246a-40ec-bad5-062ecc670872
+
+	measure 'Team Losses' = SUM('mart_team_objective_daily_summary'[losses])
+		lineageTag: ab700775-a2a5-4416-b935-70740f58abf7
+
+	measure 'Team Win Rate' = DIVIDE([Team Wins], [Team Objective Games])
+		lineageTag: 95a460b1-b5bd-4a3c-8b35-0d0e6f4683b7
+
+	measure 'Total Objective Score' = SUM('fact_team_objectives'[objective_score])
+		lineageTag: c0b2d57a-5bcf-4e0f-b818-b4d0a7160b3e
+
+	measure 'Team Objective Score' = [Total Objective Score]
+		lineageTag: 1ef42eb5-f026-4def-bda2-f1f2c2564b9e
+
+	measure 'Objective Rows' = COUNTROWS('fact_team_objectives')
+		lineageTag: c5d9ec6c-466f-4dfa-9881-9bbc9d12f0fd
+
+	measure 'Avg Objectives Per Team Game' = DIVIDE([Total Objective Score], [Objective Rows])
+		lineageTag: 62aedfaf-2022-4ae2-823e-48b86c5cdbde
+
+	measure 'Avg Objective Score' =
+			DIVIDE(
+			    SUMX(
+			        'mart_team_objective_daily_summary',
+			        'mart_team_objective_daily_summary'[avg_objective_score]
+			            * 'mart_team_objective_daily_summary'[games_played]
+			    ),
+			    [Team Objective Games]
+			)
+		lineageTag: c53b13c3-3ffa-42e5-a7fd-052ca100b568
+
+	measure 'Objective Control Share' =
+			DIVIDE(
+			    [Total Objective Score],
+			    CALCULATE([Total Objective Score], ALL('dim_team'))
+			)
+		lineageTag: b3edf207-029c-49b5-874e-e39366c15c9c
+
+	measure 'Total Baron Kills' = SUM('fact_team_objectives'[baron_kills])
+		lineageTag: 0fb6983b-e7a4-48ca-8ae5-70fd6a3c8736
+
+	measure 'Total Dragon Kills' = SUM('fact_team_objectives'[dragon_kills])
+		lineageTag: e101fb99-605d-4e85-b238-6ca2831a579c
+
+	measure 'Total Rift Herald Kills' = SUM('fact_team_objectives'[rift_herald_kills])
+		lineageTag: a5c54a7c-9be6-4a8d-867d-1702af3bfce7
+
+	measure 'Total Tower Kills' = SUM('fact_team_objectives'[tower_kills])
+		lineageTag: 528604f4-6a64-4feb-9c0f-945fe51bb007
+
+	measure 'Total Inhibitor Kills' = SUM('fact_team_objectives'[inhibitor_kills])
+		lineageTag: 1585ad2a-52e5-4f81-8db8-43783bef50e2
+
+	measure 'Total Champion Kills' = SUM('fact_team_objectives'[champion_kills])
+		lineageTag: 38c54216-639f-4a52-8e61-4cdf4b6a6c0f
+
+	measure 'Avg Baron Kills' =
+			DIVIDE(
+			    SUMX(
+			        'mart_team_objective_daily_summary',
+			        'mart_team_objective_daily_summary'[avg_baron_kills]
+			            * 'mart_team_objective_daily_summary'[games_played]
+			    ),
+			    [Team Objective Games]
+			)
+		lineageTag: bf14377a-1931-4f77-9405-a8a35aff47b8
+
+	measure 'Avg Dragon Kills' =
+			DIVIDE(
+			    SUMX(
+			        'mart_team_objective_daily_summary',
+			        'mart_team_objective_daily_summary'[avg_dragon_kills]
+			            * 'mart_team_objective_daily_summary'[games_played]
+			    ),
+			    [Team Objective Games]
+			)
+		lineageTag: c779b0fb-6d6a-40fd-8a33-9aae40bf3153
+
+	measure 'Avg Rift Herald Kills' =
+			DIVIDE(
+			    SUMX(
+			        'mart_team_objective_daily_summary',
+			        'mart_team_objective_daily_summary'[avg_rift_herald_kills]
+			            * 'mart_team_objective_daily_summary'[games_played]
+			    ),
+			    [Team Objective Games]
+			)
+		lineageTag: 4f5999b3-de2b-4759-93f0-d9cb660c38ce
+
+	measure 'Avg Tower Kills' =
+			DIVIDE(
+			    SUMX(
+			        'mart_team_objective_daily_summary',
+			        'mart_team_objective_daily_summary'[avg_tower_kills]
+			            * 'mart_team_objective_daily_summary'[games_played]
+			    ),
+			    [Team Objective Games]
+			)
+		lineageTag: 8645b571-58a9-4703-b9e9-e4009ca1668d
+
+	measure 'Avg Inhibitor Kills' =
+			DIVIDE(
+			    SUMX(
+			        'mart_team_objective_daily_summary',
+			        'mart_team_objective_daily_summary'[avg_inhibitor_kills]
+			            * 'mart_team_objective_daily_summary'[games_played]
+			    ),
+			    [Team Objective Games]
+			)
+		lineageTag: a23ae7bc-4374-4ecc-a81a-0d7b03606c68
+
+	measure 'Avg Champion Kills' =
+			DIVIDE(
+			    SUMX(
+			        'mart_team_objective_daily_summary',
+			        'mart_team_objective_daily_summary'[avg_champion_kills]
+			            * 'mart_team_objective_daily_summary'[games_played]
+			    ),
+			    [Team Objective Games]
+			)
+		lineageTag: b8b60ac5-06b2-4409-980b-e432e3faef81
+
+	column team_id
+		dataType: int64
+		formatString: 0
+		lineageTag: cf06fd2d-8b85-4f3c-baee-a9945da6ef5e
+		summarizeBy: none
+		sourceColumn: team_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column team_side
+		dataType: string
+		lineageTag: fa0215f5-d414-4e35-b1df-a7f4b7bafd18
+		summarizeBy: none
+		sourceColumn: team_side
+
+		annotation SummarizationSetBy = Automatic
+
+	column games_played
+		dataType: int64
+		formatString: 0
+		lineageTag: 9ff52b71-c6dd-4b00-b75b-5bb8b06ce8e9
+		summarizeBy: sum
+		sourceColumn: games_played
+
+		annotation SummarizationSetBy = Automatic
+
+	column wins
+		dataType: int64
+		formatString: 0
+		lineageTag: bef0c8e5-a01c-403e-a14b-60efdbb9e417
+		summarizeBy: sum
+		sourceColumn: wins
+
+		annotation SummarizationSetBy = Automatic
+
+	column losses
+		dataType: int64
+		formatString: 0
+		lineageTag: 28b712cf-505e-451b-ada7-735109b080d4
+		summarizeBy: sum
+		sourceColumn: losses
+
+		annotation SummarizationSetBy = Automatic
+
+	column win_rate
+		dataType: double
+		lineageTag: a699802c-be09-4c8c-a142-bc265c53d11e
+		summarizeBy: sum
+		sourceColumn: win_rate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column avg_baron_kills
+		dataType: double
+		lineageTag: 175ade9c-b9ac-48d5-b8c2-92a27ded2bdb
+		summarizeBy: sum
+		sourceColumn: avg_baron_kills
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column avg_dragon_kills
+		dataType: double
+		lineageTag: 4a92d16b-5313-4b65-b558-9b4fed5cf307
+		summarizeBy: sum
+		sourceColumn: avg_dragon_kills
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column avg_rift_herald_kills
+		dataType: double
+		lineageTag: 5d9884c5-289e-4482-be70-5c671f4db2d1
+		summarizeBy: sum
+		sourceColumn: avg_rift_herald_kills
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column avg_tower_kills
+		dataType: double
+		lineageTag: f09ecb37-8731-4476-af39-d5e21338795d
+		summarizeBy: sum
+		sourceColumn: avg_tower_kills
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column avg_inhibitor_kills
+		dataType: double
+		lineageTag: cbe356f8-11b2-4965-9e75-f5c8ccf835e0
+		summarizeBy: sum
+		sourceColumn: avg_inhibitor_kills
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column avg_champion_kills
+		dataType: double
+		lineageTag: 5faaa921-d26c-4b62-88e5-b3989a4b0d9f
+		summarizeBy: sum
+		sourceColumn: avg_champion_kills
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column avg_objective_score
+		dataType: double
+		lineageTag: 0d41ac93-0a0b-44d3-a79c-5448303fe2f3
+		summarizeBy: sum
+		sourceColumn: avg_objective_score
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column game_date
+		dataType: string
+		lineageTag: e29da236-798a-487a-8eaf-eaabba4518b2
+		summarizeBy: none
+		sourceColumn: game_date
+
+		annotation SummarizationSetBy = Automatic
+
+	partition mart_team_objective_daily_summary = m
+		mode: import
+		source =
+				let
+				    Source = Odbc.DataSource("dsn=riot_lakehouse_athena", [HierarchicalNavigation=true]),
+				    AwsDataCatalog_Database = Source{[Name="AwsDataCatalog",Kind="Database"]}[Data],
+				    riot_lakehouse_Schema = AwsDataCatalog_Database{[Name="riot_lakehouse",Kind="Schema"]}[Data],
+				    mart_team_objective_daily_summary_Table = riot_lakehouse_Schema{[Name="mart_team_objective_daily_summary",Kind="Table"]}[Data]
+				in
+				    mart_team_objective_daily_summary_Table
+
+	annotation PBI_ResultType = Table
+

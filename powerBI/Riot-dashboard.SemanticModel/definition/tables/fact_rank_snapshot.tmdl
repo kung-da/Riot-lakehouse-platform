@@ -1,0 +1,137 @@
+table fact_rank_snapshot
+	lineageTag: 25e2a422-740d-4cf6-a847-a03acf2e113f
+
+	column puuid
+		dataType: string
+		lineageTag: 5e8f7c63-23dc-4695-b408-7d50c5879d4d
+		summarizeBy: none
+		sourceColumn: puuid
+
+		annotation SummarizationSetBy = Automatic
+
+	column summoner_id
+		dataType: string
+		lineageTag: f7333575-ed27-4614-b1f5-1b8f9a657807
+		summarizeBy: none
+		sourceColumn: summoner_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column queue
+		dataType: string
+		lineageTag: b6bffb4b-dc99-45d6-9f6a-ea14b0a10abb
+		summarizeBy: none
+		sourceColumn: queue
+
+		annotation SummarizationSetBy = Automatic
+
+	column tier
+		dataType: string
+		lineageTag: 95afb452-84d5-44cd-8de5-0036454d4aed
+		summarizeBy: none
+		sourceColumn: tier
+
+		annotation SummarizationSetBy = Automatic
+
+	column rank
+		dataType: string
+		lineageTag: d6a569e2-9713-4a91-baab-c9a42233150b
+		summarizeBy: none
+		sourceColumn: rank
+
+		annotation SummarizationSetBy = Automatic
+
+	column league_points
+		dataType: int64
+		formatString: 0
+		lineageTag: 10c4dcdd-f22f-4f03-89a7-abb64677dd26
+		summarizeBy: sum
+		sourceColumn: league_points
+
+		annotation SummarizationSetBy = Automatic
+
+	column wins
+		dataType: int64
+		formatString: 0
+		lineageTag: c0ee76ab-4284-4380-96af-70067c48a7f0
+		summarizeBy: sum
+		sourceColumn: wins
+
+		annotation SummarizationSetBy = Automatic
+
+	column losses
+		dataType: int64
+		formatString: 0
+		lineageTag: f7712653-0a63-4a4a-a30f-8f7dde102895
+		summarizeBy: sum
+		sourceColumn: losses
+
+		annotation SummarizationSetBy = Automatic
+
+	column win_rate
+		dataType: double
+		lineageTag: ab6c25e9-f71a-4afe-b4b9-8728c446ddf5
+		summarizeBy: sum
+		sourceColumn: win_rate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column hot_streak
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 631236af-ca10-4e56-ac8b-fd16aaf1a78e
+		summarizeBy: none
+		sourceColumn: hot_streak
+
+		annotation SummarizationSetBy = Automatic
+
+	column veteran
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 760d4b08-3e54-463e-a67f-12790a295e22
+		summarizeBy: none
+		sourceColumn: veteran
+
+		annotation SummarizationSetBy = Automatic
+
+	column fresh_blood
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: a2386eb1-8c9c-44e9-a2ae-42a649b2822f
+		summarizeBy: none
+		sourceColumn: fresh_blood
+
+		annotation SummarizationSetBy = Automatic
+
+	column inactive
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 5b9f4b4e-2ec6-4038-bf50-9d933dc54ef2
+		summarizeBy: none
+		sourceColumn: inactive
+
+		annotation SummarizationSetBy = Automatic
+
+	column game_date
+		dataType: string
+		lineageTag: 27ac57bb-3a5f-46b8-bb6b-5559acce35f6
+		summarizeBy: none
+		sourceColumn: game_date
+
+		annotation SummarizationSetBy = Automatic
+
+	partition fact_rank_snapshot = m
+		mode: import
+		source =
+				let
+				    Source = Odbc.DataSource("dsn=riot_lakehouse_athena", [HierarchicalNavigation=true]),
+				    AwsDataCatalog_Database = Source{[Name="AwsDataCatalog",Kind="Database"]}[Data],
+				    riot_lakehouse_Schema = AwsDataCatalog_Database{[Name="riot_lakehouse",Kind="Schema"]}[Data],
+				    fact_rank_snapshot_Table = riot_lakehouse_Schema{[Name="fact_rank_snapshot",Kind="Table"]}[Data]
+				in
+				    fact_rank_snapshot_Table
+
+	annotation PBI_ResultType = Table
+

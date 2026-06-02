@@ -1,0 +1,78 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "9f45e030f1aabc0df00c",
+  "position": {
+    "x": 24,
+    "y": 196,
+    "z": 1020,
+    "width": 608,
+    "height": 220,
+    "tabOrder": 1020
+  },
+  "visual": {
+    "visualType": "clusteredBarChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_rank"
+                    }
+                  },
+                  "Property": "tier"
+                }
+              },
+              "queryRef": "dim_rank.tier",
+              "nativeQueryRef": "tier"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_rank_daily_summary"
+                    }
+                  },
+                  "Property": "Rank Summary Players"
+                }
+              },
+              "queryRef": "mart_rank_daily_summary.Rank Summary Players",
+              "nativeQueryRef": "Rank Summary Players"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Ph\u00e2n b\u1ed5 tier'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}
