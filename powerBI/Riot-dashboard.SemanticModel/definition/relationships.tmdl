@@ -1,97 +1,106 @@
-relationship r_fact_participant_performance_dim_champion
+relationship AutoDetected_a6ff02c8-f584-42fe-8a45-11f046d3f466
 	fromColumn: fact_participant_performance.champion_id
 	toColumn: dim_champion.champion_id
 
-relationship r_mart_champion_daily_performance_dim_champion
+relationship AutoDetected_3fe822e2-4271-4076-b101-e10e2ef5f421
 	fromColumn: mart_champion_daily_performance.champion_id
 	toColumn: dim_champion.champion_id
 
-relationship r_dim_match_dim_date
-	isActive: false
+relationship AutoDetected_41882c6c-92a0-4113-9dc0-f69d2ef333d0
 	fromColumn: dim_match.game_date
 	toColumn: dim_date.game_date
 
-relationship r_fact_participant_performance_dim_date
+relationship AutoDetected_415d24af-e0b4-42af-8a92-5ed08900857a
 	fromColumn: fact_participant_performance.game_date
 	toColumn: dim_date.game_date
 
-relationship r_fact_rank_snapshot_dim_date
+relationship AutoDetected_fc3d4e28-6616-4d8f-b174-802ce5a65cc1
 	fromColumn: fact_rank_snapshot.game_date
 	toColumn: dim_date.game_date
 
-relationship r_fact_team_objectives_dim_date
+relationship AutoDetected_9b8a77cd-e749-4887-b5c4-660c2d1d6e6d
 	fromColumn: fact_team_objectives.game_date
 	toColumn: dim_date.game_date
 
-relationship r_fact_timeline_events_dim_date
+relationship AutoDetected_bc0b9c23-f970-4e60-9bbb-4c7473a16122
 	fromColumn: fact_timeline_events.game_date
 	toColumn: dim_date.game_date
 
-relationship r_fact_timeline_frames_dim_date
+relationship AutoDetected_ff5219d8-196a-4b3b-9897-a3bb6d92a239
 	fromColumn: fact_timeline_frames.game_date
 	toColumn: dim_date.game_date
 
-relationship r_mart_champion_daily_performance_dim_date
+relationship AutoDetected_6d830c39-9320-4af2-bbe9-3ee0a3ebe2c2
 	fromColumn: mart_champion_daily_performance.game_date
 	toColumn: dim_date.game_date
 
-relationship r_mart_player_daily_performance_dim_date
+relationship AutoDetected_dbe60b84-8f73-40d1-a696-909813ca159d
 	fromColumn: mart_player_daily_performance.game_date
 	toColumn: dim_date.game_date
 
-relationship r_mart_rank_daily_summary_dim_date
+relationship AutoDetected_524c856c-3592-44b7-a5b5-f8390952d9ed
 	fromColumn: mart_rank_daily_summary.game_date
 	toColumn: dim_date.game_date
 
-relationship r_mart_role_daily_performance_dim_date
+relationship AutoDetected_69f56149-4517-4b27-97ed-7cef087713bb
 	fromColumn: mart_role_daily_performance.game_date
 	toColumn: dim_date.game_date
 
-relationship r_mart_team_objective_daily_summary_dim_date
+relationship AutoDetected_bdb0e031-12aa-4d49-878d-c76cc3acdab5
 	fromColumn: mart_team_objective_daily_summary.game_date
 	toColumn: dim_date.game_date
 
-relationship r_fact_participant_performance_dim_match
+relationship AutoDetected_26f449f7-29e0-481d-b834-0f198cdf8713
+	isActive: false
 	fromColumn: fact_participant_performance.match_id
 	toColumn: dim_match.match_id
 
-relationship r_fact_team_objectives_dim_match
+relationship AutoDetected_76c5776a-53d4-4ddc-a5c8-25bf3b75b2cc
+	isActive: false
 	fromColumn: fact_team_objectives.match_id
 	toColumn: dim_match.match_id
 
-relationship r_fact_timeline_events_dim_match
+relationship AutoDetected_8ad5f790-2109-4356-88cf-1cd39c86c33c
+	isActive: false
 	fromColumn: fact_timeline_events.match_id
 	toColumn: dim_match.match_id
 
-relationship r_fact_timeline_frames_dim_match
+relationship AutoDetected_7d1c0eaa-79f7-4706-9b32-0c61bc4fa31d
+	isActive: false
 	fromColumn: fact_timeline_frames.match_id
 	toColumn: dim_match.match_id
 
-relationship r_fact_participant_performance_dim_summoner
+relationship AutoDetected_a78619f9-2744-46e5-95ce-ed6f1d5b6095
+	fromColumn: fact_rank_snapshot.tier
+	toColumn: dim_rank.tier
+
+relationship AutoDetected_3ec0247e-535e-49ba-8e29-d7abc4cef7d6
+	crossFilteringBehavior: bothDirections
+	fromColumn: mart_rank_daily_summary.tier
+	toColumn: dim_rank.tier
+
+relationship AutoDetected_60858c64-8d3f-4622-96a0-0fed2a643392
 	fromColumn: fact_participant_performance.puuid
 	toColumn: dim_summoner.puuid
 
-relationship r_fact_rank_snapshot_dim_summoner
+relationship AutoDetected_92d7f870-1a96-4158-96e5-3705b0f1c52f
+	crossFilteringBehavior: bothDirections
 	fromColumn: fact_rank_snapshot.puuid
 	toColumn: dim_summoner.puuid
 
-relationship r_mart_player_daily_performance_dim_summoner
+relationship AutoDetected_4f330de9-182a-46cd-b51f-0e0571d16e22
 	fromColumn: mart_player_daily_performance.puuid
 	toColumn: dim_summoner.puuid
 
-relationship r_fact_participant_performance_dim_team
+relationship AutoDetected_1828d116-e7ec-4c94-8b63-8ac253ba04b6
 	fromColumn: fact_participant_performance.team_id
 	toColumn: dim_team.team_id
 
-relationship r_fact_team_objectives_dim_team
+relationship AutoDetected_b6ad78fa-4a25-4b65-8655-fdc9cb4acf3a
 	fromColumn: fact_team_objectives.team_id
 	toColumn: dim_team.team_id
 
-relationship r_fact_timeline_events_dim_team
-	fromColumn: fact_timeline_events.team_id
-	toColumn: dim_team.team_id
-
-relationship r_mart_team_objective_daily_summary_dim_team
+relationship AutoDetected_53bd9b60-ff33-47c7-8660-487a677c0344
 	fromColumn: mart_team_objective_daily_summary.team_id
 	toColumn: dim_team.team_id
 
