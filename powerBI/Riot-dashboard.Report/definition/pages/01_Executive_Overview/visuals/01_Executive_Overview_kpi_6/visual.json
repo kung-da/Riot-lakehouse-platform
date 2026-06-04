@@ -5,7 +5,7 @@
     "x": 844,
     "y": 92,
     "z": 1006,
-    "height": 74,
+    "height": 88,
     "width": 154,
     "tabOrder": 1006
   },
@@ -48,7 +48,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Avg Duration Min'"
+                  "Value": "'Duration Min'"
                 }
               }
             }

@@ -3,10 +3,10 @@
   "name": "04_Rank_Objective_Timeline_slicer_5",
   "position": {
     "x": 1134,
-    "y": 20,
+    "y": 23,
     "z": 1052,
     "height": 48,
-    "width": 113,
+    "width": 120,
     "tabOrder": 1052
   },
   "visual": {
@@ -28,7 +28,7 @@
                 }
               },
               "queryRef": "fact_timeline_events.event_type",
-              "nativeQueryRef": "event_type"
+              "nativeQueryRef": "Event Type"
             }
           ]
         }

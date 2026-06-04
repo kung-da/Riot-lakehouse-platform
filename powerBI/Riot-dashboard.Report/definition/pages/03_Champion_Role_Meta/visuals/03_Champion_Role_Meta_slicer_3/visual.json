@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.0.0/schema.json",
   "name": "03_Champion_Role_Meta_slicer_3",
   "position": {
-    "x": 1070,
+    "x": 1068,
     "y": 20,
     "z": 1034,
     "height": 48,
-    "width": 170,
+    "width": 180,
     "tabOrder": 1034
   },
   "visual": {
@@ -28,7 +28,7 @@
                 }
               },
               "queryRef": "mart_role_daily_performance.team_position",
-              "nativeQueryRef": "team_position"
+              "nativeQueryRef": "Role"
             }
           ]
         }

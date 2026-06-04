@@ -42,10 +42,10 @@
                       "Entity": "dim_date"
                     }
                   },
-                  "Property": "Champion Matches"
+                  "Property": "Champion Matches Top 10"
                 }
               },
-              "queryRef": "dim_date.Champion Matches",
+              "queryRef": "dim_date.Champion Matches Top 10",
               "nativeQueryRef": "Matches"
             }
           ]
@@ -135,7 +135,7 @@
                     "Entity": "dim_date"
                   }
                 },
-                "Property": "Champion Matches"
+                "Property": "Champion Matches Top 10"
               }
             },
             "direction": "Descending"
@@ -157,7 +157,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Top 15 Champions by Matches'"
+                  "Value": "'Top 10 Champions by Matches'"
                 }
               }
             }

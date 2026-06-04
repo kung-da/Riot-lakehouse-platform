@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.0.0/schema.json",
   "name": "02_Player_Performance_slicer_2",
   "position": {
-    "x": 886,
+    "x": 874,
     "y": 20,
     "z": 1017,
     "height": 48,
-    "width": 170,
+    "width": 180,
     "tabOrder": 1017
   },
   "visual": {
@@ -28,7 +28,7 @@
                 }
               },
               "queryRef": "dim_summoner.riot_id_game_name",
-              "nativeQueryRef": "riot_id_game_name"
+              "nativeQueryRef": "Riot ID"
             }
           ]
         }

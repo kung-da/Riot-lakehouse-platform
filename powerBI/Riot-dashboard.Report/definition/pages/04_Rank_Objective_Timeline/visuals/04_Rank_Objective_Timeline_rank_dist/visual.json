@@ -32,24 +32,6 @@
             }
           ]
         },
-        "Series": {
-          "projections": [
-            {
-              "field": {
-                "Column": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "mart_rank_daily_summary"
-                    }
-                  },
-                  "Property": "rank"
-                }
-              },
-              "queryRef": "mart_rank_daily_summary.rank",
-              "nativeQueryRef": "Rank"
-            }
-          ]
-        },
         "Y": {
           "projections": [
             {
@@ -96,7 +78,7 @@
                 }
               },
               "queryRef": "dim_date.Rank Avg Win Rate",
-              "nativeQueryRef": "Win Rate"
+              "nativeQueryRef": "Rank WR"
             },
             {
               "field": {

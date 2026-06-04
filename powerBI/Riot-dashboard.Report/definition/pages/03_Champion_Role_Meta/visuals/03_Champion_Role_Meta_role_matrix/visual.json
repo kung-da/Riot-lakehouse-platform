@@ -70,48 +70,6 @@
                       "Entity": "dim_date"
                     }
                   },
-                  "Property": "Role Avg Kills"
-                }
-              },
-              "queryRef": "dim_date.Role Avg Kills",
-              "nativeQueryRef": "Kills"
-            },
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "dim_date"
-                    }
-                  },
-                  "Property": "Role Avg Deaths"
-                }
-              },
-              "queryRef": "dim_date.Role Avg Deaths",
-              "nativeQueryRef": "Deaths"
-            },
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "dim_date"
-                    }
-                  },
-                  "Property": "Role Avg Assists"
-                }
-              },
-              "queryRef": "dim_date.Role Avg Assists",
-              "nativeQueryRef": "Assists"
-            },
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "dim_date"
-                    }
-                  },
                   "Property": "Role Avg KDA"
                 }
               },

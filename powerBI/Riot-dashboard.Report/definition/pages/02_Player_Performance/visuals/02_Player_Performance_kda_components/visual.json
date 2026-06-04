@@ -42,10 +42,10 @@
                       "Entity": "dim_date"
                     }
                   },
-                  "Property": "Player Total Kills"
+                  "Property": "Player Total Kills Top 10"
                 }
               },
-              "queryRef": "dim_date.Player Total Kills",
+              "queryRef": "dim_date.Player Total Kills Top 10",
               "nativeQueryRef": "Kills"
             },
             {
@@ -56,10 +56,10 @@
                       "Entity": "dim_date"
                     }
                   },
-                  "Property": "Player Total Deaths"
+                  "Property": "Player Total Deaths Top 10"
                 }
               },
-              "queryRef": "dim_date.Player Total Deaths",
+              "queryRef": "dim_date.Player Total Deaths Top 10",
               "nativeQueryRef": "Deaths"
             },
             {
@@ -70,10 +70,10 @@
                       "Entity": "dim_date"
                     }
                   },
-                  "Property": "Player Total Assists"
+                  "Property": "Player Total Assists Top 10"
                 }
               },
-              "queryRef": "dim_date.Player Total Assists",
+              "queryRef": "dim_date.Player Total Assists Top 10",
               "nativeQueryRef": "Assists"
             }
           ]
@@ -157,7 +157,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'KDA Components by Active Players'"
+                  "Value": "'KDA Components - Top 10 Active Players'"
                 }
               }
             }

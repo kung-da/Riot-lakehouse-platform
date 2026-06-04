@@ -3,9 +3,9 @@
   "name": "04_Rank_Objective_Timeline_kpi_2",
   "position": {
     "x": 230,
-    "y": 92,
+    "y": 96,
     "z": 1054,
-    "height": 74,
+    "height": 84,
     "width": 198,
     "tabOrder": 1054
   },
@@ -48,7 +48,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Rank Win Rate'"
+                  "Value": "'Rank WR'"
                 }
               }
             }

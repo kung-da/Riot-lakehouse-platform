@@ -3,9 +3,9 @@
   "name": "04_Rank_Objective_Timeline_kpi_3",
   "position": {
     "x": 436,
-    "y": 92,
+    "y": 96,
     "z": 1055,
-    "height": 74,
+    "height": 84,
     "width": 198,
     "tabOrder": 1055
   },
@@ -48,7 +48,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Objective Games'"
+                  "Value": "'Obj Games'"
                 }
               }
             }

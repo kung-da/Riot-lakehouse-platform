@@ -189,6 +189,51 @@ table dim_date
 		displayFolder: Player
 		lineageTag: 3bbf026a-c4c5-5265-bbf6-c47983824b6a
 
+	measure 'Player Total Kills Top 10' =
+			VAR PlayerRank =
+			    RANKX(
+			        ALLSELECTED(dim_summoner[riot_id_game_name]),
+			        [Player Matches],
+			        [Player Matches],
+			        DESC,
+			        DENSE
+			    )
+			RETURN
+			    IF(PlayerRank <= 10, [Player Total Kills])
+		formatString: #,##0
+		displayFolder: Player
+		lineageTag: 09f5ab31-c8ef-4d77-927f-e46d2f7838e7
+
+	measure 'Player Total Deaths Top 10' =
+			VAR PlayerRank =
+			    RANKX(
+			        ALLSELECTED(dim_summoner[riot_id_game_name]),
+			        [Player Matches],
+			        [Player Matches],
+			        DESC,
+			        DENSE
+			    )
+			RETURN
+			    IF(PlayerRank <= 10, [Player Total Deaths])
+		formatString: #,##0
+		displayFolder: Player
+		lineageTag: da623462-49bb-4ca3-b6ba-c4cf17ec9466
+
+	measure 'Player Total Assists Top 10' =
+			VAR PlayerRank =
+			    RANKX(
+			        ALLSELECTED(dim_summoner[riot_id_game_name]),
+			        [Player Matches],
+			        [Player Matches],
+			        DESC,
+			        DENSE
+			    )
+			RETURN
+			    IF(PlayerRank <= 10, [Player Total Assists])
+		formatString: #,##0
+		displayFolder: Player
+		lineageTag: ffd416b4-44ef-43bd-955a-fe55da720d9e
+
 	measure 'Champion Matches' = SUM(mart_champion_daily_performance[matches_played])
 		formatString: #,##0
 		displayFolder: Champion
@@ -225,6 +270,45 @@ table dim_date
 		formatString: 0.0%
 		displayFolder: Champion
 		lineageTag: d298094d-d5fc-5c7e-98f6-b43d2adbe5c8
+
+	measure 'Top Champion Pick Rate' =
+			MAXX(
+			    VALUES(dim_champion[champion_name]),
+			    [Champion Pick Rate]
+			)
+		formatString: 0.0%
+		displayFolder: Champion
+		lineageTag: eac8d563-59e0-4f38-9970-56f4f534b0dd
+
+	measure 'Champion Matches Top 10' =
+			VAR ChampionRank =
+			    RANKX(
+			        ALLSELECTED(dim_champion[champion_name]),
+			        [Champion Matches],
+			        [Champion Matches],
+			        DESC,
+			        DENSE
+			    )
+			RETURN
+			    IF(ChampionRank <= 10, [Champion Matches])
+		formatString: #,##0
+		displayFolder: Champion
+		lineageTag: 8a37f2e4-c43a-4016-b174-0ffb0d1e1d69
+
+	measure 'Champion Matches Top 15' =
+			VAR ChampionRank =
+			    RANKX(
+			        ALLSELECTED(dim_champion[champion_name]),
+			        [Champion Matches],
+			        [Champion Matches],
+			        DESC,
+			        DENSE
+			    )
+			RETURN
+			    IF(ChampionRank <= 15, [Champion Matches])
+		formatString: #,##0
+		displayFolder: Champion
+		lineageTag: e628f397-82c0-4ac5-bca4-2c055b62bcaf
 
 	measure 'Champion Total Kills' = SUM(mart_champion_daily_performance[total_kills])
 		formatString: #,##0
@@ -569,6 +653,21 @@ table dim_date
 		formatString: #,##0
 		displayFolder: Timeline
 		lineageTag: 4b275f29-7c01-56b9-a447-c017e55a4971
+
+	measure 'Timeline Events Top 10' =
+			VAR EventRank =
+			    RANKX(
+			        ALLSELECTED(fact_timeline_events[event_type]),
+			        [Timeline Events],
+			        [Timeline Events],
+			        DESC,
+			        DENSE
+			    )
+			RETURN
+			    IF(EventRank <= 10, [Timeline Events])
+		formatString: #,##0
+		displayFolder: Timeline
+		lineageTag: edafac42-f27d-4315-b6dc-62c02dd110ee
 
 	measure 'Avg Events Per Match' =
 			DIVIDE(

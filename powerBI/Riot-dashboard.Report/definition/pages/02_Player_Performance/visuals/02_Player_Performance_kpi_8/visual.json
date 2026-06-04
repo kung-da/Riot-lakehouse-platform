@@ -5,7 +5,7 @@
     "x": 1109,
     "y": 92,
     "z": 1026,
-    "height": 74,
+    "height": 88,
     "width": 147,
     "tabOrder": 1026
   },
@@ -48,7 +48,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Unique Champions'"
+                  "Value": "'Champions'"
                 }
               }
             }

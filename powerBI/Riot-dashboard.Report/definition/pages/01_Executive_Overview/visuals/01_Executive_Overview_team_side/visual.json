@@ -46,7 +46,7 @@
                 }
               },
               "queryRef": "dim_date.Team Objective Games",
-              "nativeQueryRef": "Games"
+              "nativeQueryRef": "Objective Games"
             }
           ]
         },
@@ -64,7 +64,7 @@
                 }
               },
               "queryRef": "dim_date.Team Win Rate",
-              "nativeQueryRef": "Win Rate"
+              "nativeQueryRef": "Team WR"
             },
             {
               "field": {
@@ -78,7 +78,7 @@
                 }
               },
               "queryRef": "dim_date.Avg Objective Score",
-              "nativeQueryRef": "Objective Score"
+              "nativeQueryRef": "Avg Objective Score"
             },
             {
               "field": {

@@ -5,7 +5,7 @@
     "x": 179,
     "y": 92,
     "z": 1020,
-    "height": 74,
+    "height": 88,
     "width": 147,
     "tabOrder": 1020
   },
@@ -48,7 +48,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Player Win Rate'"
+                  "Value": "'Win Rate'"
                 }
               }
             }

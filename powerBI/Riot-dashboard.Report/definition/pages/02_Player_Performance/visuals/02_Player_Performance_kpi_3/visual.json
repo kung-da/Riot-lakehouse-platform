@@ -5,7 +5,7 @@
     "x": 334,
     "y": 92,
     "z": 1021,
-    "height": 74,
+    "height": 88,
     "width": 147,
     "tabOrder": 1021
   },
@@ -48,7 +48,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'KDA Ratio'"
+                  "Value": "'KDA'"
                 }
               }
             }

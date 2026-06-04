@@ -5,7 +5,7 @@
     "x": 179,
     "y": 92,
     "z": 1036,
-    "height": 74,
+    "height": 88,
     "width": 147,
     "tabOrder": 1036
   },
@@ -48,7 +48,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Unique Players'"
+                  "Value": "'Players'"
                 }
               }
             }

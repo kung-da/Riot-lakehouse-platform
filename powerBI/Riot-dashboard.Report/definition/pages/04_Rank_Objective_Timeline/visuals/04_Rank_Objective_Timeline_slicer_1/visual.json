@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.0.0/schema.json",
   "name": "04_Rank_Objective_Timeline_slicer_1",
   "position": {
-    "x": 650,
-    "y": 20,
+    "x": 622,
+    "y": 23,
     "z": 1048,
     "height": 48,
-    "width": 113,
+    "width": 120,
     "tabOrder": 1048
   },
   "visual": {
@@ -28,7 +28,7 @@
                 }
               },
               "queryRef": "dim_date.game_date",
-              "nativeQueryRef": "game_date"
+              "nativeQueryRef": "Date"
             }
           ]
         }

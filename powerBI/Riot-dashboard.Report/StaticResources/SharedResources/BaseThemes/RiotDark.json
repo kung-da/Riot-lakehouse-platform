@@ -25,7 +25,7 @@
   "null": "#6B7280",
   "textClasses": {
     "callout": {
-      "fontSize": 26,
+      "fontSize": 18,
       "fontFace": "Segoe UI Semibold",
       "color": "#F9FAFB"
     },
@@ -119,6 +119,7 @@
         ],
         "legend": [
           {
+            "showTitle": false,
             "labelColor": {
               "solid": {
                 "color": "#9CA3AF"
@@ -129,6 +130,7 @@
         ],
         "categoryAxis": [
           {
+            "showAxisTitle": false,
             "labelColor": {
               "solid": {
                 "color": "#9CA3AF"
@@ -150,6 +152,7 @@
         ],
         "valueAxis": [
           {
+            "showAxisTitle": false,
             "labelColor": {
               "solid": {
                 "color": "#9CA3AF"
@@ -171,6 +174,53 @@
         "visualHeader": [
           {
             "show": false
+          }
+        ]
+      }
+    },
+    "cardVisual": {
+      "*": {
+        "*": [
+          {
+            "$id": "default",
+            "paddingUniform": 0
+          }
+        ],
+        "value": [
+          {
+            "$id": "default",
+            "fontSize": 18,
+            "fontFamily": "Segoe UI Semibold",
+            "fontColor": {
+              "solid": {
+                "color": "#F9FAFB"
+              }
+            }
+          }
+        ],
+        "label": [
+          {
+            "$id": "default",
+            "fontSize": 8,
+            "fontColor": {
+              "solid": {
+                "color": "#9CA3AF"
+              }
+            },
+            "position": "belowValue"
+          }
+        ],
+        "layout": [
+          {
+            "maxTiles": 1,
+            "cellPadding": 0,
+            "paddingUniform": 0
+          }
+        ],
+        "padding": [
+          {
+            "$id": "default",
+            "paddingUniform": 0
           }
         ]
       }

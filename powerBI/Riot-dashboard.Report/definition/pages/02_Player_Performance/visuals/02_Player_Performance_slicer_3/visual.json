@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.0.0/schema.json",
   "name": "02_Player_Performance_slicer_3",
   "position": {
-    "x": 1070,
+    "x": 1068,
     "y": 20,
     "z": 1018,
     "height": 48,
-    "width": 170,
+    "width": 180,
     "tabOrder": 1018
   },
   "visual": {
@@ -28,7 +28,7 @@
                 }
               },
               "queryRef": "dim_summoner.summoner_name",
-              "nativeQueryRef": "summoner_name"
+              "nativeQueryRef": "Summoner"
             }
           ]
         }

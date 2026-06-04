@@ -42,10 +42,10 @@
                       "Entity": "dim_date"
                     }
                   },
-                  "Property": "Champion Matches"
+                  "Property": "Champion Matches Top 10"
                 }
               },
-              "queryRef": "dim_date.Champion Matches",
+              "queryRef": "dim_date.Champion Matches Top 10",
               "nativeQueryRef": "Matches"
             }
           ]
@@ -92,7 +92,7 @@
                 }
               },
               "queryRef": "dim_date.Champion Total Kills",
-              "nativeQueryRef": "Total Kills"
+              "nativeQueryRef": "Kills"
             }
           ]
         }
@@ -107,7 +107,7 @@
                     "Entity": "dim_date"
                   }
                 },
-                "Property": "Champion Matches"
+                "Property": "Champion Matches Top 10"
               }
             },
             "direction": "Descending"

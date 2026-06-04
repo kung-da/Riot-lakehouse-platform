@@ -5,7 +5,7 @@
     "x": 489,
     "y": 92,
     "z": 1038,
-    "height": 74,
+    "height": 88,
     "width": 147,
     "tabOrder": 1038
   },
@@ -24,11 +24,11 @@
                       "Entity": "dim_date"
                     }
                   },
-                  "Property": "Champion Pick Rate"
+                  "Property": "Top Champion Pick Rate"
                 }
               },
-              "queryRef": "dim_date.Champion Pick Rate",
-              "nativeQueryRef": "Pick Rate"
+              "queryRef": "dim_date.Top Champion Pick Rate",
+              "nativeQueryRef": "Top Pick Rate"
             }
           ]
         }
@@ -48,7 +48,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Pick Rate'"
+                  "Value": "'Top Pick Rate'"
                 }
               }
             }

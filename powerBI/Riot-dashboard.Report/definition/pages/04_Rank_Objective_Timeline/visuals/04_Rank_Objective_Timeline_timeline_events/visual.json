@@ -42,10 +42,10 @@
                       "Entity": "dim_date"
                     }
                   },
-                  "Property": "Timeline Events"
+                  "Property": "Timeline Events Top 10"
                 }
               },
-              "queryRef": "dim_date.Timeline Events",
+              "queryRef": "dim_date.Timeline Events Top 10",
               "nativeQueryRef": "Events"
             }
           ]
@@ -107,7 +107,7 @@
                     "Entity": "dim_date"
                   }
                 },
-                "Property": "Timeline Events"
+                "Property": "Timeline Events Top 10"
               }
             },
             "direction": "Descending"

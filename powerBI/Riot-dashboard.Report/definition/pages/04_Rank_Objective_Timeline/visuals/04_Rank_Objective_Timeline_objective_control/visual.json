@@ -42,11 +42,11 @@
                       "Entity": "dim_date"
                     }
                   },
-                  "Property": "Total Objective Score"
+                  "Property": "Team Objective Games"
                 }
               },
-              "queryRef": "dim_date.Total Objective Score",
-              "nativeQueryRef": "Objective Score"
+              "queryRef": "dim_date.Team Objective Games",
+              "nativeQueryRef": "Objective Games"
             }
           ]
         },
@@ -60,81 +60,11 @@
                       "Entity": "dim_date"
                     }
                   },
-                  "Property": "Total Dragon Kills"
-                }
-              },
-              "queryRef": "dim_date.Total Dragon Kills",
-              "nativeQueryRef": "Dragons"
-            },
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "dim_date"
-                    }
-                  },
-                  "Property": "Total Baron Kills"
-                }
-              },
-              "queryRef": "dim_date.Total Baron Kills",
-              "nativeQueryRef": "Barons"
-            },
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "dim_date"
-                    }
-                  },
-                  "Property": "Total Rift Herald Kills"
-                }
-              },
-              "queryRef": "dim_date.Total Rift Herald Kills",
-              "nativeQueryRef": "Rift Heralds"
-            },
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "dim_date"
-                    }
-                  },
-                  "Property": "Total Tower Kills"
-                }
-              },
-              "queryRef": "dim_date.Total Tower Kills",
-              "nativeQueryRef": "Towers"
-            },
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "dim_date"
-                    }
-                  },
-                  "Property": "Total Inhibitor Kills"
-                }
-              },
-              "queryRef": "dim_date.Total Inhibitor Kills",
-              "nativeQueryRef": "Inhibitors"
-            },
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "dim_date"
-                    }
-                  },
                   "Property": "Team Win Rate"
                 }
               },
               "queryRef": "dim_date.Team Win Rate",
-              "nativeQueryRef": "Win Rate"
+              "nativeQueryRef": "Team WR"
             },
             {
               "field": {
@@ -148,7 +78,7 @@
                 }
               },
               "queryRef": "dim_date.Avg Objective Score",
-              "nativeQueryRef": "Objective Score"
+              "nativeQueryRef": "Avg Objective Score"
             }
           ]
         }
@@ -163,7 +93,7 @@
                     "Entity": "dim_date"
                   }
                 },
-                "Property": "Total Objective Score"
+                "Property": "Team Objective Games"
               }
             },
             "direction": "Descending"
@@ -185,7 +115,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Objective Score by Side'"
+                  "Value": "'Objective Games by Side'"
                 }
               }
             }

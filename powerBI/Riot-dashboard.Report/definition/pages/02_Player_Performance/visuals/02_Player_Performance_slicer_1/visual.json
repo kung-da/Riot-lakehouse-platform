@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.0.0/schema.json",
   "name": "02_Player_Performance_slicer_1",
   "position": {
-    "x": 702,
+    "x": 680,
     "y": 20,
     "z": 1016,
     "height": 48,
-    "width": 170,
+    "width": 180,
     "tabOrder": 1016
   },
   "visual": {
@@ -28,7 +28,7 @@
                 }
               },
               "queryRef": "dim_date.game_date",
-              "nativeQueryRef": "game_date"
+              "nativeQueryRef": "Date"
             }
           ]
         }
