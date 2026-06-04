@@ -1,7 +1,10 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/pagesMetadata/1.1.0/schema.json",
   "pageOrder": [
-    "56862746ee782702ed84"
+    "01_Executive_Overview",
+    "02_Player_Performance",
+    "03_Champion_Role_Meta",
+    "04_Rank_Objective_Timeline"
   ],
-  "activePageName": "56862746ee782702ed84"
+  "activePageName": "01_Executive_Overview"
 }

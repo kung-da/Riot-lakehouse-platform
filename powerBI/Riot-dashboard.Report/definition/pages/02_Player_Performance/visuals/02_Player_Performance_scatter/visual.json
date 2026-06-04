@@ -1,0 +1,215 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.0.0/schema.json",
+  "name": "02_Player_Performance_scatter",
+  "position": {
+    "x": 494,
+    "y": 185,
+    "z": 1028,
+    "height": 235,
+    "width": 360,
+    "tabOrder": 1028
+  },
+  "visual": {
+    "visualType": "scatterChart",
+    "drillFilterOtherVisuals": true,
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_summoner"
+                    }
+                  },
+                  "Property": "riot_id_game_name"
+                }
+              },
+              "queryRef": "dim_summoner.riot_id_game_name",
+              "nativeQueryRef": "Riot ID"
+            }
+          ]
+        },
+        "X": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_date"
+                    }
+                  },
+                  "Property": "Player Avg Gold Earned"
+                }
+              },
+              "queryRef": "dim_date.Player Avg Gold Earned",
+              "nativeQueryRef": "Avg Gold"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_date"
+                    }
+                  },
+                  "Property": "Player Avg Damage To Champions"
+                }
+              },
+              "queryRef": "dim_date.Player Avg Damage To Champions",
+              "nativeQueryRef": "Avg Damage"
+            }
+          ]
+        },
+        "Size": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_date"
+                    }
+                  },
+                  "Property": "Player Matches"
+                }
+              },
+              "queryRef": "dim_date.Player Matches",
+              "nativeQueryRef": "Matches"
+            }
+          ]
+        },
+        "Tooltips": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_summoner"
+                    }
+                  },
+                  "Property": "summoner_name"
+                }
+              },
+              "queryRef": "dim_summoner.summoner_name",
+              "nativeQueryRef": "Summoner"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_date"
+                    }
+                  },
+                  "Property": "Player Matches"
+                }
+              },
+              "queryRef": "dim_date.Player Matches",
+              "nativeQueryRef": "Matches"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_date"
+                    }
+                  },
+                  "Property": "Player Win Rate"
+                }
+              },
+              "queryRef": "dim_date.Player Win Rate",
+              "nativeQueryRef": "Win Rate"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_date"
+                    }
+                  },
+                  "Property": "Player KDA Ratio"
+                }
+              },
+              "queryRef": "dim_date.Player KDA Ratio",
+              "nativeQueryRef": "KDA"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_date"
+                    }
+                  },
+                  "Property": "Player Avg Vision Score"
+                }
+              },
+              "queryRef": "dim_date.Player Avg Vision Score",
+              "nativeQueryRef": "Vision"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_date"
+                    }
+                  },
+                  "Property": "Player Avg CS"
+                }
+              },
+              "queryRef": "dim_date.Player Avg CS",
+              "nativeQueryRef": "CS"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Gold vs Damage Efficiency'"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "visualHeader": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
