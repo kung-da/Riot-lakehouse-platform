@@ -8,6 +8,7 @@ import pytest
 
 from lakehouse.common.config import LakehouseConfig
 from lakehouse.common.spark import get_spark
+from lakehouse.common.storage import write_table_dataset
 from lakehouse.gold.schemas import gold_schema
 from lakehouse.quality.data_quality import run_data_quality
 from lakehouse.quality.report_writer import render_markdown_report
@@ -25,6 +26,11 @@ def _config(tmp_path: Path) -> LakehouseConfig:
         default_format="parquet",
         write_mode="append",
         values={
+            "table_formats": {
+                "bronze": "parquet",
+                "silver": "delta",
+                "gold": "delta",
+            },
             "quality": {"layers": ["gold"], "output_dir": "data_quality"},
             "spark": {
                 "app_name": "data-quality-test",
@@ -328,18 +334,21 @@ def test_run_data_quality_help():
 
 def test_data_quality_writes_reports_and_flags_failed_gold_checks(tmp_path: Path):
     pytest.importorskip("pyspark")
+    pytest.importorskip("delta")
 
     config = _config(tmp_path)
-    spark = get_spark(config=config)
+    spark = get_spark(config=config, enable_delta=True)
     try:
-        (
-            spark.createDataFrame(
+        write_table_dataset(
+            dataframe=spark.createDataFrame(
                 _player_metric_rows(),
                 schema=gold_schema("mart_player_daily_performance"),
-            )
-            .write.mode("overwrite")
-            .partitionBy("game_date")
-            .parquet(config.layer_path("gold", "mart_player_daily_performance").as_posix())
+            ),
+            output_path=config.layer_path("gold", "mart_player_daily_performance"),
+            mode="overwrite",
+            partition_columns=["game_date"],
+            output_partitions=1,
+            table_format="delta",
         )
     finally:
         spark.stop()

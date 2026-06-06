@@ -28,7 +28,7 @@ def test_load_config_reads_env_file_and_expands_s3_paths(tmp_path, monkeypatch):
                 "default_format: parquet",
                 "write_mode: append",
                 "spark:",
-                "  enable_delta: ${SPARK_ENABLE_DELTA:-false}",
+                "  enable_delta: ${SPARK_ENABLE_DELTA:-true}",
             ]
         ),
         encoding="utf-8",
@@ -51,7 +51,7 @@ def test_load_config_reads_env_file_and_expands_s3_paths(tmp_path, monkeypatch):
     assert config.layer_path("silver", "matches").as_posix() == (
         "s3://riot-test-bucket/lakehouse/silver/matches"
     )
-    assert config.values["spark"]["enable_delta"] is False
+    assert config.values["spark"]["enable_delta"] is True
 
 
 def test_s3_path_converts_to_spark_s3a_uri():

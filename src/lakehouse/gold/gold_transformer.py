@@ -4,20 +4,17 @@ from typing import Any
 
 from lakehouse.common.logging import get_logger
 from lakehouse.common.spark import get_spark
-from lakehouse.common.storage import has_files, to_spark_path, write_parquet_dataset
+from lakehouse.common.storage import (
+    has_table_data,
+    layer_table_format,
+    read_table_dataset,
+    write_table_dataset,
+)
 from lakehouse.gold.aggregations import AGGREGATION_BUILDERS, GOLD_TABLE_SOURCES
 from lakehouse.gold.schemas import GOLD_COLUMNS, GOLD_TABLES, gold_schema
 
 
 LOGGER = get_logger(__name__)
-
-
-def _spark_path(path: Any) -> str:
-    return to_spark_path(path)
-
-
-def _has_parquet_files(path: Any) -> bool:
-    return has_files(path, "*.parquet")
 
 
 def _selected_tables(tables: list[str] | None) -> list[str]:
@@ -68,16 +65,18 @@ def _write_table(
     mode: str,
     partition_columns: list[str],
     output_partitions: int,
+    table_format: str,
 ) -> None:
     if output_partitions < 1:
         raise ValueError("gold.output_partitions must be greater than zero")
 
-    write_parquet_dataset(
+    write_table_dataset(
         dataframe=dataframe,
         output_path=output_path,
         mode=mode,
         partition_columns=partition_columns,
         output_partitions=output_partitions,
+        table_format=table_format,
     )
 
 
@@ -93,26 +92,35 @@ def run_gold_transform(
     )
     available_source_paths = {}
     missing_sources = set()
+    silver_format = layer_table_format(config, "silver")
+    gold_format = layer_table_format(config, "gold")
 
     for source in required_sources:
         source_path = config.layer_path("silver", source)
         LOGGER.info("Reading Silver table %s from %s", source, source_path)
-        if _has_parquet_files(source_path):
+        if has_table_data(source_path, silver_format):
             available_source_paths[source] = source_path
         else:
             missing_sources.add(source)
-            LOGGER.warning("Silver input path has no Parquet files: %s", source_path)
+            LOGGER.warning(
+                "Silver input path has no %s table data: %s",
+                silver_format,
+                source_path,
+            )
 
     if not available_source_paths:
         return counts
 
-    spark = get_spark(config=config)
+    spark = get_spark(
+        config=config,
+        enable_delta="delta" in {silver_format, gold_format},
+    )
     mode = _gold_write_mode(config, write_mode)
     output_partitions = _gold_output_partitions(config)
     silver_tables: dict[str, Any] = {}
     try:
         for source, source_path in available_source_paths.items():
-            silver_tables[source] = spark.read.parquet(_spark_path(source_path))
+            silver_tables[source] = read_table_dataset(spark, source_path, silver_format)
 
         for table in selected_tables:
             table_sources = GOLD_TABLE_SOURCES[table]
@@ -145,9 +153,16 @@ def run_gold_transform(
                         mode=mode,
                         partition_columns=partition_columns,
                         output_partitions=output_partitions,
+                        table_format=gold_format,
                     )
                 counts[table] = row_count
-                LOGGER.info("Gold table %s wrote %s rows to %s", table, row_count, output_path)
+                LOGGER.info(
+                    "Gold table %s wrote %s rows as %s to %s",
+                    table,
+                    row_count,
+                    gold_format,
+                    output_path,
+                )
             finally:
                 dataframe.unpersist()
         return counts

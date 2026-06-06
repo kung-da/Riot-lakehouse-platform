@@ -6,6 +6,10 @@ checkpoint_root: s3://${S3_BUCKET:?Set S3_BUCKET in your .env}/${S3_CHECKPOINT_P
 report_root: s3://${S3_BUCKET:?Set S3_BUCKET in your .env}/${S3_REPORT_PREFIX:-reports}
 default_format: parquet
 write_mode: append
+table_formats:
+  bronze: parquet
+  silver: delta
+  gold: delta
 partition_columns:
   bronze:
     - dataset
@@ -18,7 +22,7 @@ partition_columns:
 spark:
   app_name: ${SPARK_APP_NAME:-riot-lakehouse-prod-local-raw}
   master: ${SPARK_S3_MASTER:-local[2]}
-  enable_delta: ${SPARK_ENABLE_DELTA:-false}
+  enable_delta: ${SPARK_ENABLE_DELTA:-true}
   driver_memory: ${SPARK_DRIVER_MEMORY:-4g}
   shuffle_partitions: ${SPARK_SHUFFLE_PARTITIONS:-4}
   default_parallelism: ${SPARK_DEFAULT_PARALLELISM:-4}

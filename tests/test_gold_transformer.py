@@ -8,6 +8,7 @@ import pytest
 
 from lakehouse.common.config import LakehouseConfig
 from lakehouse.common.spark import get_spark
+from lakehouse.common.storage import has_table_data, read_table_dataset, write_table_dataset
 from lakehouse.gold.aggregations import (
     build_fact_participant_performance,
     build_fact_team_objectives,
@@ -33,6 +34,11 @@ def _config(tmp_path: Path) -> LakehouseConfig:
         default_format="parquet",
         write_mode="append",
         values={
+            "table_formats": {
+                "bronze": "parquet",
+                "silver": "delta",
+                "gold": "delta",
+            },
             "partition_columns": {
                 "bronze": ["dataset", "ingest_date"],
                 "silver": ["dataset", "game_date"],
@@ -348,11 +354,13 @@ def _timeline_frame_rows() -> list[dict]:
 
 
 def _write_partitioned_silver_table(spark, path: Path, rows: list[dict]) -> None:
-    (
-        spark.createDataFrame(rows)
-        .write.mode("overwrite")
-        .partitionBy("dataset", "game_date")
-        .parquet(path.as_posix())
+    write_table_dataset(
+        dataframe=spark.createDataFrame(rows),
+        output_path=path,
+        mode="overwrite",
+        partition_columns=["dataset", "game_date"],
+        output_partitions=1,
+        table_format="delta",
     )
 
 
@@ -472,9 +480,10 @@ def test_run_gold_help():
 
 def test_run_gold_transform_writes_dimensional_model_tables(tmp_path: Path):
     pytest.importorskip("pyspark")
+    pytest.importorskip("delta")
 
     config = _config(tmp_path)
-    spark = get_spark(config=config)
+    spark = get_spark(config=config, enable_delta=True)
     try:
         _write_partitioned_silver_table(
             spark,
@@ -531,31 +540,37 @@ def test_run_gold_transform_writes_dimensional_model_tables(tmp_path: Path):
     }
 
     for table in GOLD_TABLES:
-        assert list(config.layer_path("gold", table).rglob("*.parquet"))
+        assert has_table_data(config.layer_path("gold", table), "delta")
         if "game_date" in GOLD_COLUMNS[table]:
             assert (config.layer_path("gold", table) / f"game_date={GAME_DATE}").exists()
 
-    spark = get_spark(config=config)
+    spark = get_spark(config=config, enable_delta=True)
     try:
         player = (
-            spark.read.parquet(
-                config.layer_path("gold", "mart_player_daily_performance").as_posix()
+            read_table_dataset(
+                spark,
+                config.layer_path("gold", "mart_player_daily_performance"),
+                "delta",
             )
             .where("puuid = 'p1'")
             .collect()[0]
             .asDict()
         )
         team = (
-            spark.read.parquet(
-                config.layer_path("gold", "mart_team_objective_daily_summary").as_posix()
+            read_table_dataset(
+                spark,
+                config.layer_path("gold", "mart_team_objective_daily_summary"),
+                "delta",
             )
             .where("team_id = 100")
             .collect()[0]
             .asDict()
         )
         participant_fact = (
-            spark.read.parquet(
-                config.layer_path("gold", "fact_participant_performance").as_posix()
+            read_table_dataset(
+                spark,
+                config.layer_path("gold", "fact_participant_performance"),
+                "delta",
             )
             .where("match_id = 'VN2_1' and participant_id = 1")
             .collect()[0]

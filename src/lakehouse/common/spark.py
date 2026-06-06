@@ -46,6 +46,76 @@ def _aws_setting(aws_config: dict[str, Any], key: str, env_name: str) -> Any:
     return os.getenv(env_name) or aws_config.get(key)
 
 
+def _bool_setting(value: Any, default: bool = False) -> bool:
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str) and not value.strip():
+        return default
+    return str(value).strip().lower() in {"1", "true", "yes", "y", "on"}
+
+
+def _package_list(value: Any) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, str) and not value.strip():
+        return []
+    if isinstance(value, (list, tuple, set)):
+        items = value
+    else:
+        items = str(value).split(",")
+    return [str(item).strip() for item in items if str(item).strip()]
+
+
+def _s3_dependency_packages(config: Any | None, spark_config: dict[str, Any]) -> list[str]:
+    if not _config_uses_s3(config) and not spark_config.get("include_hadoop_aws_package", False):
+        return []
+    if not _bool_setting(spark_config.get("include_hadoop_aws_package", False)):
+        return []
+
+    packages = _package_list(
+        spark_config.get("hadoop_aws_package", "org.apache.hadoop:hadoop-aws:3.4.2")
+    )
+    if _bool_setting(spark_config.get("include_spark_hadoop_cloud_package", False)):
+        packages.append(
+            str(
+                spark_config.get(
+                    "spark_hadoop_cloud_package",
+                    "org.apache.spark:spark-hadoop-cloud_2.13:4.1.2",
+                )
+            )
+        )
+    return list(dict.fromkeys(packages))
+
+
+def _configured_dependency_packages(spark_config: dict[str, Any]) -> list[str]:
+    conf = spark_config.get("conf", {}) or {}
+    return [
+        *_package_list(spark_config.get("jars_packages")),
+        *_package_list(conf.get("spark.jars.packages")),
+    ]
+
+
+def _configure_spark_packages(builder: Any, packages: list[str]) -> Any:
+    if not packages:
+        return builder
+    return builder.config("spark.jars.packages", ",".join(dict.fromkeys(packages)))
+
+
+def _configure_delta_package(builder: Any, extra_packages: list[str]) -> Any:
+    try:
+        from delta import configure_spark_with_delta_pip
+    except ImportError as exc:
+        raise RuntimeError(
+            "Install the spark extra with Delta Lake support: pip install -e '.[spark]'"
+        ) from exc
+    return configure_spark_with_delta_pip(
+        builder,
+        extra_packages=list(dict.fromkeys(extra_packages)),
+    )
+
+
 def _apply_s3_defaults(builder: Any, config: Any | None, spark_config: dict[str, Any]) -> Any:
     if config is not None and hasattr(config, "values"):
         aws_config = config.values.get("aws", {}) or {}
@@ -53,24 +123,6 @@ def _apply_s3_defaults(builder: Any, config: Any | None, spark_config: dict[str,
         aws_config = {}
     if not _config_uses_s3(config) and not aws_config:
         return builder
-
-    if spark_config.get("include_hadoop_aws_package", False):
-        package = spark_config.get("hadoop_aws_package", "org.apache.hadoop:hadoop-aws:3.4.2")
-        packages = [
-            item.strip()
-            for item in str(package).split(",")
-            if item.strip()
-        ]
-        if spark_config.get("include_spark_hadoop_cloud_package", False):
-            packages.append(
-                str(
-                    spark_config.get(
-                        "spark_hadoop_cloud_package",
-                        "org.apache.spark:spark-hadoop-cloud_2.13:4.1.2",
-                    )
-                )
-            )
-        builder = builder.config("spark.jars.packages", ",".join(dict.fromkeys(packages)))
 
     region = _aws_setting(aws_config, "region", "AWS_REGION") or os.getenv("AWS_DEFAULT_REGION")
     endpoint = _aws_setting(aws_config, "s3_endpoint_url", "AWS_S3_ENDPOINT_URL")
@@ -126,7 +178,7 @@ def get_spark(
         spark_config = config.values.get("spark", {}) if hasattr(config, "values") else {}
         app_name = spark_config.get("app_name", app_name)
         master = spark_config.get("master", master)
-        enable_delta = spark_config.get("enable_delta", enable_delta)
+        enable_delta = bool(enable_delta) or _bool_setting(spark_config.get("enable_delta", False))
     else:
         spark_config = {}
 
@@ -156,8 +208,10 @@ def get_spark(
         .config("spark.sql.sources.partitionColumnTypeInference.enabled", "false")
     )
     builder = _apply_s3_defaults(builder, config, spark_config)
-    for key, value in spark_config.get("conf", {}).items():
-        builder = builder.config(str(key), str(value))
+    dependency_packages = [
+        *_s3_dependency_packages(config, spark_config),
+        *_configured_dependency_packages(spark_config),
+    ]
     if enable_delta:
         builder = (
             builder.config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
@@ -166,4 +220,14 @@ def get_spark(
                 "org.apache.spark.sql.delta.catalog.DeltaCatalog",
             )
         )
+        if _bool_setting(spark_config.get("configure_delta_package", True), default=True):
+            builder = _configure_delta_package(builder, dependency_packages)
+        else:
+            builder = _configure_spark_packages(builder, dependency_packages)
+    else:
+        builder = _configure_spark_packages(builder, dependency_packages)
+    for key, value in spark_config.get("conf", {}).items():
+        if str(key) == "spark.jars.packages" and dependency_packages:
+            continue
+        builder = builder.config(str(key), str(value))
     return builder.getOrCreate()

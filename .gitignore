@@ -41,6 +41,7 @@ logs/
 _SUCCESS
 
 # Power BI local caches and binary exports.
+powerBI/
 powerBI/**/.pbi/
 powerBI/**/*.abf
 powerBI/**/*.pbix

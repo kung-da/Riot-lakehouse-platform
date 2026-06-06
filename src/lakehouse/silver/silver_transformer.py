@@ -10,7 +10,13 @@ from urllib.parse import unquote, urlsplit
 
 from lakehouse.common.logging import get_logger
 from lakehouse.common.spark import get_spark
-from lakehouse.common.storage import has_files, is_s3_path, to_spark_path, write_parquet_dataset
+from lakehouse.common.storage import (
+    has_files,
+    is_s3_path,
+    layer_table_format,
+    to_spark_path,
+    write_table_dataset,
+)
 from lakehouse.silver.clean_matches import clean_match
 from lakehouse.silver.clean_participants import clean_participants
 from lakehouse.silver.clean_ranked import clean_ranked
@@ -430,17 +436,19 @@ def _write_table(
     mode: str,
     partition_columns: list[str],
     output_partitions: int,
+    table_format: str,
 ) -> None:
     if output_partitions < 1:
         raise ValueError("silver.output_partitions must be greater than zero")
 
     available_partitions = [column for column in partition_columns if column in dataframe.columns]
-    write_parquet_dataset(
+    write_table_dataset(
         dataframe=dataframe,
         output_path=output_path,
         mode=mode,
         partition_columns=available_partitions,
         output_partitions=output_partitions,
+        table_format=table_format,
     )
 
 
@@ -613,7 +621,8 @@ def run_silver_transform(
         LOGGER.warning("Raw input path has no JSON files: %s", config.raw_root)
         return counts
 
-    spark = get_spark(config=config)
+    table_format = layer_table_format(config, "silver")
+    spark = get_spark(config=config, enable_delta=table_format == "delta")
     mode = _silver_write_mode(config, write_mode)
     partition_columns = _silver_partition_columns(config)
     output_partitions = _silver_output_partitions(config)
@@ -667,11 +676,18 @@ def run_silver_transform(
                         mode=mode,
                         partition_columns=partition_columns,
                         output_partitions=output_partitions,
+                        table_format=table_format,
                     )
             finally:
                 dataframe.unpersist()
             counts[table] = row_count
-            LOGGER.info("Silver table %s wrote %s rows to %s", table, row_count, output_path)
+            LOGGER.info(
+                "Silver table %s wrote %s rows as %s to %s",
+                table,
+                row_count,
+                table_format,
+                output_path,
+            )
         return counts
     finally:
         if bronze_cached and bronze is not None:

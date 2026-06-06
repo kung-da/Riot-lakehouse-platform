@@ -61,8 +61,8 @@ Riot Games API
     -> Python Crawler
     -> raw/{dataset}/*.json
     -> Bronze Parquet
-    -> Silver Parquet
-    -> Gold Parquet
+    -> Silver Delta
+    -> Gold Delta
     -> Platinum feature SQL registry
     -> Glue Data Catalog / Athena
     -> Power BI Dashboard
@@ -126,7 +126,7 @@ Silver đọc Bronze, parse payload và tạo các bảng domain:
 - `timeline_frames`
 - `timeline_events`
 
-Silver thực hiện schema normalization, null handling, deduplication theo business key và partition theo `dataset`, `game_date`.
+Silver thực hiện schema normalization, null handling, deduplication theo business key, ghi Delta Lake và partition theo `dataset`, `game_date`.
 
 ### Gold Layer
 
@@ -137,6 +137,8 @@ Gold tạo mô hình analytics cho BI:
 | Dimensions | `dim_date`, `dim_match`, `dim_summoner`, `dim_champion`, `dim_team`, `dim_rank` |
 | Facts | `fact_participant_performance`, `fact_team_objectives`, `fact_rank_snapshot`, `fact_timeline_frames`, `fact_timeline_events` |
 | Marts | `mart_player_daily_performance`, `mart_champion_daily_performance`, `mart_role_daily_performance`, `mart_rank_daily_summary`, `mart_team_objective_daily_summary` |
+
+Gold được ghi dưới dạng Delta Lake, partition theo `game_date` khi bảng có cột này.
 
 ### Platinum Layer
 
@@ -157,7 +159,7 @@ Layer này có thể mở rộng để materialize feature tables phục vụ ma
 | Containerization | Docker, Docker Compose |
 | Orchestration | Apache Airflow |
 | Storage | Local filesystem, AWS S3 |
-| File Format | Parquet, Delta Lake optional qua config |
+| File Format | Bronze Parquet; Silver/Gold Delta Lake; Platinum SQL registry |
 | Catalog | AWS Glue Data Catalog |
 | Query | AWS Athena |
 | BI | Power BI |
@@ -256,7 +258,7 @@ SPARK_S3_MASTER=local[2]
 SPARK_DRIVER_MEMORY=4g
 SPARK_SHUFFLE_PARTITIONS=8
 SPARK_DEFAULT_PARALLELISM=8
-SPARK_ENABLE_DELTA=false
+SPARK_ENABLE_DELTA=true
 SPARK_INCLUDE_HADOOP_AWS_PACKAGE=true
 SPARK_INCLUDE_HADOOP_CLOUD_PACKAGE=false
 SPARK_S3A_CONNECTION_TIMEOUT=600000
@@ -599,25 +601,21 @@ sql/athena/create_gold_tables.sql
 sql/athena/create_platinum_tables.sql
 ```
 
-Khi tạo bảng trên Athena, bổ sung `LOCATION` tương ứng với S3 output của từng bảng:
+Với Silver/Gold Delta Lake, Athena external table chỉ cần trỏ tới table location và khai báo `table_type`:
 
 ```sql
-CREATE EXTERNAL TABLE IF NOT EXISTS riot_lakehouse.silver_matches (
-  match_id string,
-  game_creation bigint
-)
-PARTITIONED BY (dataset string, game_date string)
-STORED AS PARQUET
-LOCATION 's3://<bucket>/lakehouse/silver/matches/';
+CREATE EXTERNAL TABLE IF NOT EXISTS riot_lakehouse.silver_matches
+LOCATION 's3://<bucket>/lakehouse/silver/matches/'
+TBLPROPERTIES ('table_type' = 'DELTA');
 ```
 
-Sau khi tạo bảng partitioned:
+Không chạy `MSCK REPAIR TABLE` cho Silver/Gold Delta; Athena đồng bộ metadata từ `_delta_log`. Với Bronze/Platinum Parquet partitioned tables, vẫn có thể repair partition:
 
 ```sql
-MSCK REPAIR TABLE riot_lakehouse.silver_matches;
+MSCK REPAIR TABLE riot_lakehouse.bronze_raw_json;
 ```
 
-Có thể thay bước repair bằng Glue Crawler nếu muốn tự động phát hiện partition.
+Có thể thay bước repair Parquet bằng Glue Crawler nếu muốn tự động phát hiện partition.
 
 ### Athena Query Ví Dụ
 
@@ -807,7 +805,8 @@ Secrets nên đặt trong GitHub Actions Secrets:
 - [ ] Bổ sung crawler module chính thức trong repo.
 - [ ] Thêm dataset `spectator`, `static`, `league`.
 - [ ] Tự động register Glue/Athena tables.
-- [ ] Hỗ trợ Delta Lake/Iceberg table format ở production.
+- [x] Hỗ trợ Delta Lake cho Silver/Gold ở production.
+- [ ] Đánh giá Iceberg table format cho use case cần engine-neutral writes.
 - [ ] Thêm alerting qua Airflow/CloudWatch.
 - [ ] Thêm dashboard screenshots thực tế vào `docs/images/`.
 

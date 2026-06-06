@@ -6,6 +6,10 @@ checkpoint_root: ${LAKEHOUSE_CHECKPOINT_ROOT:-metadata/checkpoints}
 report_root: ${LAKEHOUSE_REPORT_ROOT:-reports}
 default_format: parquet
 write_mode: append
+table_formats:
+  bronze: parquet
+  silver: delta
+  gold: delta
 partition_columns:
   bronze:
     - dataset
@@ -18,7 +22,7 @@ partition_columns:
 spark:
   app_name: ${SPARK_APP_NAME:-riot-lakehouse-dev}
   master: ${SPARK_MASTER:-local[4]}
-  enable_delta: ${SPARK_ENABLE_DELTA:-false}
+  enable_delta: ${SPARK_ENABLE_DELTA:-true}
   driver_memory: ${SPARK_DRIVER_MEMORY:-4g}
   shuffle_partitions: ${SPARK_SHUFFLE_PARTITIONS:-2}
   default_parallelism: ${SPARK_DEFAULT_PARALLELISM:-2}

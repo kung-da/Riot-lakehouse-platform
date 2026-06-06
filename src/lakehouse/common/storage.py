@@ -16,6 +16,12 @@ from urllib.parse import urlsplit
 
 S3_SCHEMES = ("s3://", "s3a://")
 LOGGER = logging.getLogger(__name__)
+SUPPORTED_TABLE_FORMATS = {"parquet", "delta"}
+DEFAULT_LAYER_FORMATS = {
+    "bronze": "parquet",
+    "silver": "delta",
+    "gold": "delta",
+}
 
 
 def is_s3_uri(value: str) -> bool:
@@ -45,6 +51,41 @@ def has_files(path: Any, pattern: str) -> bool:
     if isinstance(path, S3Path):
         return any(path.rglob(pattern))
     return path.exists() and any(path.rglob(pattern))
+
+
+def normalize_table_format(table_format: str) -> str:
+    normalized = table_format.strip().lower()
+    if normalized not in SUPPORTED_TABLE_FORMATS:
+        valid = ", ".join(sorted(SUPPORTED_TABLE_FORMATS))
+        raise ValueError(f"Unsupported table format {table_format!r}. Use one of: {valid}")
+    return normalized
+
+
+def layer_table_format(config: Any, layer: str) -> str:
+    values = getattr(config, "values", {}) if config is not None else {}
+    table_formats = values.get("table_formats", {}) if isinstance(values, dict) else {}
+    layer_config = values.get(layer, {}) if isinstance(values, dict) else {}
+    configured_format = table_formats.get(layer)
+    if isinstance(layer_config, dict):
+        configured_format = layer_config.get("format", configured_format)
+    if configured_format is None:
+        configured_format = DEFAULT_LAYER_FORMATS.get(
+            layer,
+            getattr(config, "default_format", "parquet") if config is not None else "parquet",
+        )
+    return normalize_table_format(str(configured_format))
+
+
+def has_table_data(path: Any, table_format: str) -> bool:
+    normalized_format = normalize_table_format(table_format)
+    if normalized_format == "delta":
+        return has_files(path / "_delta_log", "*.json")
+    return has_files(path, "*.parquet")
+
+
+def read_table_dataset(spark: Any, input_path: Any, table_format: str) -> Any:
+    normalized_format = normalize_table_format(table_format)
+    return spark.read.format(normalized_format).load(to_spark_path(input_path))
 
 
 def _s3_client() -> Any:
@@ -163,6 +204,37 @@ def write_parquet_dataset(
         if normalized_mode == "overwrite":
             delete_s3_prefix(output_path)
         upload_directory_to_s3(local_output, output_path)
+
+
+def write_table_dataset(
+    dataframe: Any,
+    output_path: Any,
+    mode: str,
+    partition_columns: list[str],
+    output_partitions: int,
+    table_format: str,
+) -> None:
+    normalized_format = normalize_table_format(table_format)
+    if normalized_format == "parquet":
+        write_parquet_dataset(
+            dataframe=dataframe,
+            output_path=output_path,
+            mode=mode,
+            partition_columns=partition_columns,
+            output_partitions=output_partitions,
+        )
+        return
+
+    if output_partitions < 1:
+        raise ValueError("output_partitions must be greater than zero")
+
+    dataframe = dataframe.coalesce(output_partitions)
+    writer = dataframe.write.format("delta").option("compression", "snappy")
+    if partition_columns:
+        writer = writer.partitionBy(*partition_columns)
+    if mode.lower() == "overwrite":
+        writer = writer.option("overwriteSchema", "true")
+    writer.mode(mode).save(to_spark_path(output_path))
 
 
 class _S3TextWriter(io.StringIO):

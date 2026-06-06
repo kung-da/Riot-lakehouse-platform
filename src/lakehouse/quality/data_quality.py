@@ -6,7 +6,12 @@ from typing import Any
 
 from lakehouse.common.logging import get_logger
 from lakehouse.common.spark import get_spark
-from lakehouse.common.storage import S3Path, has_files, to_spark_path
+from lakehouse.common.storage import (
+    S3Path,
+    has_table_data,
+    layer_table_format,
+    read_table_dataset,
+)
 from lakehouse.quality.report_writer import write_quality_reports
 from lakehouse.quality.rules import (
     FAIL,
@@ -107,7 +112,8 @@ def run_data_quality(
     selected_layers = _selected_layers(config, layers)
     selected_tables = _selected_tables(selected_layers, tables_by_layer)
 
-    spark = get_spark(config=config)
+    selected_formats = {layer_table_format(config, layer) for layer in selected_layers}
+    spark = get_spark(config=config, enable_delta="delta" in selected_formats)
     try:
         report = build_data_quality_report(
             spark=spark,
@@ -142,10 +148,13 @@ def build_data_quality_report(
     }
 
     for layer in layers:
+        table_format = layer_table_format(config, layer)
         for table in tables_by_layer[layer]:
             table_path = config.layer_path(layer, table)
             LOGGER.info("Running quality checks for %s.%s at %s", layer, table, table_path)
-            report["tables"].append(_analyze_table(spark, layer, table, table_path))
+            report["tables"].append(
+                _analyze_table(spark, layer, table, table_path, table_format)
+            )
 
     if "gold" in layers:
         _append_gold_star_schema_checks(spark, config, report, tables_by_layer)
@@ -155,11 +164,17 @@ def build_data_quality_report(
     return report
 
 
-def _analyze_table(spark: Any, layer: str, table: str, table_path: Path) -> dict[str, Any]:
-    if not _has_parquet_files(table_path):
+def _analyze_table(
+    spark: Any,
+    layer: str,
+    table: str,
+    table_path: Path,
+    table_format: str,
+) -> dict[str, Any]:
+    if not has_table_data(table_path, table_format):
         check = RuleResult(
             name="table_exists",
-            description="Expected Parquet table exists",
+            description=f"Expected {table_format} table exists",
             severity="error",
             status=FAIL,
             passed=False,
@@ -176,13 +191,13 @@ def _analyze_table(spark: Any, layer: str, table: str, table_path: Path) -> dict
             "checks": [check],
         }
 
-    dataframe = spark.read.parquet(_spark_path(table_path)).cache()
+    dataframe = read_table_dataset(spark, table_path, table_format).cache()
     try:
         row_count = int(dataframe.count())
         checks = [
             RuleResult(
                 name="table_exists",
-                description="Expected Parquet table exists",
+                description=f"Expected {table_format} table exists",
                 severity="error",
                 status=PASS,
                 passed=True,
@@ -248,7 +263,8 @@ def _gold_reference_check(
 ) -> dict[str, Any]:
     fact_path = config.layer_path("gold", fact_table)
     dim_path = config.layer_path("gold", dim_table)
-    if not _has_parquet_files(fact_path) or not _has_parquet_files(dim_path):
+    gold_format = layer_table_format(config, "gold")
+    if not has_table_data(fact_path, gold_format) or not has_table_data(dim_path, gold_format):
         return RuleResult(
             name=check_name,
             description=f"{fact_table} references existing {dim_table} keys",
@@ -270,8 +286,8 @@ def _gold_reference_check(
             },
         ).as_dict()
 
-    fact_dataframe = spark.read.parquet(_spark_path(fact_path))
-    dimension_dataframe = spark.read.parquet(_spark_path(dim_path))
+    fact_dataframe = read_table_dataset(spark, fact_path, gold_format)
+    dimension_dataframe = read_table_dataset(spark, dim_path, gold_format)
     missing_fact_columns = [
         column for column in fact_columns if column not in fact_dataframe.columns
     ]
@@ -591,14 +607,6 @@ def _quality_output_dir(config: Any) -> Path | S3Path:
     quality_config = config.values.get("quality", {}) if hasattr(config, "values") else {}
     output_dir = quality_config.get("output_dir", "data_quality")
     return config.report_root / str(output_dir)
-
-
-def _spark_path(path: Any) -> str:
-    return to_spark_path(path)
-
-
-def _has_parquet_files(path: Any) -> bool:
-    return has_files(path, "*.parquet")
 
 
 def _ratio(value: int, total: int) -> float:

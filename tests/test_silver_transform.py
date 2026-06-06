@@ -8,6 +8,7 @@ import pytest
 
 from lakehouse.common.config import LakehouseConfig
 from lakehouse.common.spark import get_spark
+from lakehouse.common.storage import has_table_data, read_table_dataset
 from lakehouse.silver.silver_transformer import (
     SILVER_TABLES,
     _selected_tables,
@@ -120,6 +121,11 @@ def _config(tmp_path: Path) -> LakehouseConfig:
         default_format="parquet",
         write_mode="append",
         values={
+            "table_formats": {
+                "bronze": "parquet",
+                "silver": "delta",
+                "gold": "delta",
+            },
             "partition_columns": {
                 "bronze": ["dataset", "ingest_date"],
                 "silver": ["dataset", "game_date"],
@@ -258,6 +264,7 @@ def test_run_silver_help():
 
 def test_run_silver_transform_writes_partitioned_domain_tables(tmp_path: Path):
     pytest.importorskip("pyspark")
+    pytest.importorskip("delta")
 
     config = _config(tmp_path)
     records = [
@@ -356,7 +363,7 @@ def test_run_silver_transform_writes_partitioned_domain_tables(tmp_path: Path):
     }
 
     for table in SILVER_TABLES:
-        assert list(config.layer_path("silver", table).rglob("*.parquet"))
+        assert has_table_data(config.layer_path("silver", table), "delta")
 
     expected_game_date = derive_game_date_from_ms(1710000000000)
     assert (
@@ -365,18 +372,18 @@ def test_run_silver_transform_writes_partitioned_domain_tables(tmp_path: Path):
         / f"game_date={expected_game_date}"
     ).exists()
 
-    spark = get_spark(config=config)
+    spark = get_spark(config=config, enable_delta=True)
     try:
         match = (
-            spark.read.parquet(config.layer_path("silver", "matches").as_posix())
+            read_table_dataset(spark, config.layer_path("silver", "matches"), "delta")
             .collect()[0]
             .asDict()
         )
-        participant = (
-            spark.read.parquet(config.layer_path("silver", "participants").as_posix())
-            .collect()[0]
-            .asDict()
-        )
+        participant = read_table_dataset(
+            spark,
+            config.layer_path("silver", "participants"),
+            "delta",
+        ).collect()[0].asDict()
         assert match["dataset"] == "matches"
         assert match["game_date"] == expected_game_date
         assert match["source_file"] == "raw/matches/VN2_1.json"
