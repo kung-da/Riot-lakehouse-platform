@@ -30,6 +30,7 @@ spark:
   stage_max_consecutive_attempts: ${SPARK_STAGE_MAX_CONSECUTIVE_ATTEMPTS:-4}
   files_max_partition_bytes: ${SPARK_SQL_FILES_MAX_PARTITION_BYTES:-33554432}
   include_hadoop_aws_package: ${SPARK_INCLUDE_HADOOP_AWS_PACKAGE:-true}
+  hadoop_aws_package: ${SPARK_HADOOP_AWS_PACKAGE:-org.apache.hadoop:hadoop-aws:3.3.4}
   include_spark_hadoop_cloud_package: ${SPARK_INCLUDE_HADOOP_CLOUD_PACKAGE:-false}
   spark_hadoop_cloud_package: ${SPARK_HADOOP_CLOUD_PACKAGE:-org.apache.spark:spark-hadoop-cloud_2.13:4.1.2}
   conf:

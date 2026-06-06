@@ -26,6 +26,7 @@ S3A_STABILITY_CONF = {
     "spark.hadoop.mapreduce.fileoutputcommitter.algorithm.version": "2",
     "spark.hadoop.mapreduce.fileoutputcommitter.cleanup-failures.ignored": "true",
 }
+DEFAULT_HADOOP_AWS_PACKAGE = "org.apache.hadoop:hadoop-aws:3.3.4"
 
 
 def _config_uses_s3(config: Any | None) -> bool:
@@ -74,9 +75,7 @@ def _s3_dependency_packages(config: Any | None, spark_config: dict[str, Any]) ->
     if not _bool_setting(spark_config.get("include_hadoop_aws_package", False)):
         return []
 
-    packages = _package_list(
-        spark_config.get("hadoop_aws_package", "org.apache.hadoop:hadoop-aws:3.4.2")
-    )
+    packages = _package_list(spark_config.get("hadoop_aws_package", DEFAULT_HADOOP_AWS_PACKAGE))
     if _bool_setting(spark_config.get("include_spark_hadoop_cloud_package", False)):
         packages.append(
             str(

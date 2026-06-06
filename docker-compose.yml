@@ -14,7 +14,7 @@ x-lakehouse-volumes: &lakehouse-volumes
   - ./dags:/app/dags
   - ./scripts:/app/scripts
   - ./tests:/app/tests
-  - ivy-cache:/root/.ivy2.5.2
+  - ivy-cache:/root/.ivy2
 
 services:
   lakehouse:
