@@ -1,4 +1,4 @@
-# Local data/runtime artifacts. Keep these on disk/S3, not in Git.
+# Local data/runtime artifacts: keep on disk/S3, not in Git.
 raw/**
 !raw/**/
 !raw/**/.gitkeep
@@ -8,28 +8,42 @@ data/**
 reports/**
 !reports/**/
 !reports/**/.gitkeep
-metadata/checkpoints/**
-!metadata/checkpoints/
-!metadata/checkpoints/.gitkeep
+metadata/**
+!metadata/**/
+!metadata/**/.gitkeep
 
-# Local runtime/config
+# Local config/secrets.
 .env
+.env.*
+!.env.example
+
+# Python/runtime noise.
 .venv/
 __pycache__/
 *.py[cod]
 .pytest_cache/
 
-# Lakehouse outputs are reproducible
-metadata/airflow/
+# JS/frontend build noise.
+node_modules/
+dist/
+build/
 
-# Power BI local caches, settings, and binary exports
+# Spark/Airflow local noise.
+spark-warehouse/
+metastore_db/
+derby.log
+logs/
+
+# Lakehouse generated files.
+*.parquet
+*.snappy.parquet
+*.crc
+_SUCCESS
+
+# Power BI local caches and binary exports.
 powerBI/**/.pbi/
 powerBI/**/*.abf
 powerBI/**/*.pbix
 powerBI/**/*.pbit
 
-# Spark/Airflow local noise
-spark-warehouse/
-metastore_db/
-derby.log
-logs/
+# Put tiny examples in samples/ when needed; docs/images stay tracked.
