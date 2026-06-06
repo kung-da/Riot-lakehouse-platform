@@ -17,11 +17,11 @@ partition_columns:
     - game_date
 spark:
   app_name: ${SPARK_APP_NAME:-riot-lakehouse-prod-local-raw}
-  master: ${SPARK_S3_MASTER:-local[8]}
+  master: ${SPARK_S3_MASTER:-local[2]}
   enable_delta: ${SPARK_ENABLE_DELTA:-false}
   driver_memory: ${SPARK_DRIVER_MEMORY:-4g}
-  shuffle_partitions: ${SPARK_SHUFFLE_PARTITIONS:-8}
-  default_parallelism: ${SPARK_DEFAULT_PARALLELISM:-8}
+  shuffle_partitions: ${SPARK_SHUFFLE_PARTITIONS:-4}
+  default_parallelism: ${SPARK_DEFAULT_PARALLELISM:-4}
   task_max_failures: ${SPARK_TASK_MAX_FAILURES:-4}
   stage_max_consecutive_attempts: ${SPARK_STAGE_MAX_CONSECUTIVE_ATTEMPTS:-4}
   files_max_partition_bytes: ${SPARK_SQL_FILES_MAX_PARTITION_BYTES:-33554432}
