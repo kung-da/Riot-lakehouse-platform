@@ -252,11 +252,39 @@ S3_REPORT_PREFIX=reports
 ATHENA_DATABASE=riot_lakehouse
 
 SPARK_MASTER=local[*]
+SPARK_S3_MASTER=local[2]
 SPARK_DRIVER_MEMORY=4g
 SPARK_SHUFFLE_PARTITIONS=8
 SPARK_DEFAULT_PARALLELISM=8
 SPARK_ENABLE_DELTA=false
 SPARK_INCLUDE_HADOOP_AWS_PACKAGE=true
+SPARK_INCLUDE_HADOOP_CLOUD_PACKAGE=false
+SPARK_S3A_CONNECTION_TIMEOUT=600000
+SPARK_S3A_SOCKET_TIMEOUT=600000
+SPARK_S3A_CONNECTION_ESTABLISH_TIMEOUT=600000
+SPARK_S3A_CONNECTION_REQUEST_TIMEOUT=120000
+SPARK_S3A_CONNECTION_ACQUISITION_TIMEOUT=120000
+SPARK_S3A_ATTEMPTS_MAXIMUM=10
+SPARK_S3A_RETRY_LIMIT=10
+SPARK_S3A_CONNECTION_MAXIMUM=100
+SPARK_S3A_INPUT_FADVISE=random
+SPARK_S3A_READAHEAD_RANGE=65536
+SPARK_S3A_FAST_UPLOAD=true
+SPARK_SQL_FILES_MAX_PARTITION_BYTES=33554432
+SPARK_TASK_MAX_FAILURES=4
+SPARK_STAGE_MAX_CONSECUTIVE_ATTEMPTS=4
+SPARK_SQL_FILES_IGNORE_CORRUPT_FILES=false
+SPARK_SQL_FILES_IGNORE_MISSING_FILES=false
+SPARK_SQL_PARQUET_ENABLE_VECTORIZED_READER=false
+SPARK_HADOOP_PARQUET_HADOOP_VECTORED_IO_ENABLED=false
+SPARK_HADOOP_PARQUET_ENABLE_VECTORED_IO=false
+SPARK_SQL_ADAPTIVE_ENABLED=false
+SILVER_SOURCE=raw
+SILVER_CACHE_BRONZE=false
+SILVER_CACHE_STORAGE_LEVEL=DISK_ONLY
+SILVER_RAW_INPUT_PARTITIONS=256
+SILVER_OUTPUT_PARTITIONS=1
+GOLD_OUTPUT_PARTITIONS=1
 
 AIRFLOW_PORT=8088
 _AIRFLOW_WWW_USER_USERNAME=admin
@@ -448,7 +476,7 @@ Các DAG hiện có:
 | `riot_silver_transform` | Chạy Silver transform |
 | `riot_gold_model` | Chạy Gold transform |
 | `riot_platinum_features` | Chạy Platinum feature registry |
-| `riot_full_lakehouse_pipeline` | Chạy `Bronze -> Silver -> Gold -> Platinum -> Data Quality` |
+| `riot_full_lakehouse_pipeline` | Chạy `Preflight -> Bronze -> Silver -> Gold -> Platinum -> Data Quality` |
 
 Airflow metadata local được lưu tại `metadata/airflow/`.
 
@@ -490,6 +518,66 @@ macOS/Linux:
 ```bash
 docker compose --env-file .env.prod run --rm lakehouse python -m lakehouse.jobs.run_full_pipeline --env prod
 ```
+
+### Run Airflow on S3/prod
+
+Build image sạch để chắc chắn cả `lakehouse` và `airflow` đều có AWS dependencies:
+
+```bash
+docker compose build --no-cache lakehouse
+docker compose --profile airflow build --no-cache airflow
+```
+
+Kiểm tra `boto3` trong image `lakehouse`:
+
+```bash
+docker compose run --rm lakehouse python -c "import boto3; print('boto3 ok')"
+```
+
+Chạy preflight trước khi bật full pipeline trên S3/prod:
+
+```bash
+docker compose --env-file .env.prod run --rm lakehouse python -m lakehouse.jobs.check_environment --env prod
+```
+
+Chạy Airflow prod trên Windows `cmd`:
+
+```bat
+set LAKEHOUSE_ENV=prod
+set LAKEHOUSE_ENV_FILE=.env.prod
+docker compose --profile airflow up --build airflow
+```
+
+macOS/Linux:
+
+```bash
+export LAKEHOUSE_ENV=prod
+export LAKEHOUSE_ENV_FILE=.env.prod
+docker compose --profile airflow up --build airflow
+```
+
+Trong Airflow log, mỗi task phải in rõ command đã resolve environment, ví dụ:
+
+```text
+Running lakehouse command: python -m lakehouse.jobs.run_silver --env prod
+```
+
+Nếu chạy local/dev, truyền rõ `--env dev` khi chạy command thủ công:
+
+```bash
+docker compose run --rm lakehouse python -m lakehouse.jobs.run_silver --env dev
+```
+
+Nếu gặp S3 Parquet timeout kiểu `ParquetFileReader.readVectored`, hãy:
+
+1. Chạy lại preflight `lakehouse.jobs.check_environment --env prod`.
+2. Rebuild image sạch để đảm bảo có `boto3` và Spark AWS package.
+3. Kiểm tra các biến `SPARK_S3A_*` trong `.env.prod`; default hiện là socket timeout 600 giây,
+   request/acquisition timeout 120 giây, retry 10 lần, connection pool 100.
+4. Giữ `SPARK_SQL_PARQUET_ENABLE_VECTORIZED_READER=false` và
+   `SPARK_HADOOP_PARQUET_HADOOP_VECTORED_IO_ENABLED=false`.
+5. Giữ `SPARK_S3_MASTER=local[2]` hoặc tăng từ từ; tránh `local[*]` khi đọc nhiều Parquet từ S3.
+6. Retry task trong Airflow; các lakehouse task có bounded retry, không retry vô hạn.
 
 `configs/prod.yaml` map các root path sang S3:
 
@@ -701,6 +789,8 @@ Secrets nên đặt trong GitHub Actions Secrets:
 | Airflow UI không mở | Kiểm tra `AIRFLOW_PORT`, thử `http://localhost:8088` hoặc `http://localhost:8080` |
 | Airflow login fail | Kiểm tra `_AIRFLOW_WWW_USER_USERNAME` và `_AIRFLOW_WWW_USER_PASSWORD` trong `.env` |
 | S3 path lỗi | Kiểm tra `S3_BUCKET`, AWS credentials và `LAKEHOUSE_ENV=prod` |
+| S3 Parquet timeout | Chạy preflight, rebuild image có `aws`, giữ S3A timeout 600 giây và tắt vectored Parquet read |
+| Airflow command thiếu env | Kiểm tra log phải có `Running lakehouse command: python -m ... --env prod` hoặc `--env dev` |
 | Athena không thấy partition mới | Chạy `MSCK REPAIR TABLE` hoặc dùng Glue Crawler |
 | Power BI không query được Athena | Kiểm tra Athena result location, IAM permission và ODBC/Athena connector |
 | Data quality FAIL | Mở `reports/data_quality/data_quality_latest.md` để xem rule fail |

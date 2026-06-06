@@ -4,7 +4,7 @@ import shutil
 from pathlib import Path
 from typing import Any
 
-from lakehouse.common.storage import S3Path, is_s3_path, to_spark_path
+from lakehouse.common.storage import S3Path, is_s3_path, to_spark_path, write_parquet_dataset
 
 
 def _bronze_schema() -> Any:
@@ -47,11 +47,12 @@ def write_parquet(
     if output_partitions < 1:
         raise ValueError("output_partitions must be greater than zero")
 
-    dataframe = spark.createDataFrame(records, schema=_bronze_schema()).coalesce(output_partitions)
-    (
-        dataframe.write.mode("append")
-        .option("compression", "snappy")
-        .partitionBy(*partition_columns)
-        .parquet(_spark_path(output_path))
+    dataframe = spark.createDataFrame(records, schema=_bronze_schema())
+    write_parquet_dataset(
+        dataframe=dataframe,
+        output_path=output_path,
+        mode="append",
+        partition_columns=partition_columns,
+        output_partitions=output_partitions,
     )
     return output_path

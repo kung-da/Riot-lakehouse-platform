@@ -21,7 +21,7 @@ services:
     build:
       context: .
       args:
-        INSTALL_EXTRAS: ${LAKEHOUSE_INSTALL_EXTRAS:-dev,spark,aws}
+        INSTALL_EXTRAS: dev,spark,aws
     env_file:
       - ${LAKEHOUSE_ENV_FILE:-.env}
     environment:
@@ -34,7 +34,7 @@ services:
     build:
       context: .
       args:
-        INSTALL_EXTRAS: ${AIRFLOW_INSTALL_EXTRAS:-dev,spark,aws,airflow}
+        INSTALL_EXTRAS: dev,spark,aws,airflow
     env_file:
       - ${LAKEHOUSE_ENV_FILE:-.env}
     environment:

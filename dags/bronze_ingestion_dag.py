@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dags._common import DEFAULT_START_DATE, DAG, BashOperator, lakehouse_command
+from dags._common import DEFAULT_START_DATE, DAG, lakehouse_task
 
 
 if DAG:
@@ -10,7 +10,7 @@ if DAG:
         schedule=None,
         catchup=False,
     ) as dag:
-        BashOperator(
+        lakehouse_task(
             task_id="run_bronze",
-            bash_command=lakehouse_command("lakehouse.jobs.run_bronze"),
+            module="lakehouse.jobs.run_bronze",
         )

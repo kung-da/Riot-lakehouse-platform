@@ -4,7 +4,7 @@ from typing import Any
 
 from lakehouse.common.logging import get_logger
 from lakehouse.common.spark import get_spark
-from lakehouse.common.storage import has_files, to_spark_path
+from lakehouse.common.storage import has_files, to_spark_path, write_parquet_dataset
 from lakehouse.gold.aggregations import AGGREGATION_BUILDERS, GOLD_TABLE_SOURCES
 from lakehouse.gold.schemas import GOLD_COLUMNS, GOLD_TABLES, gold_schema
 
@@ -72,11 +72,13 @@ def _write_table(
     if output_partitions < 1:
         raise ValueError("gold.output_partitions must be greater than zero")
 
-    dataframe = dataframe.coalesce(output_partitions)
-    writer = dataframe.write.mode(mode).option("compression", "snappy")
-    if partition_columns:
-        writer = writer.partitionBy(*partition_columns)
-    writer.parquet(_spark_path(output_path))
+    write_parquet_dataset(
+        dataframe=dataframe,
+        output_path=output_path,
+        mode=mode,
+        partition_columns=partition_columns,
+        output_partitions=output_partitions,
+    )
 
 
 def run_gold_transform(

@@ -16,7 +16,12 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 def _lakehouse_command(module):
-    return f"cd {shlex.quote(str(PROJECT_ROOT))} && python -m {module}"
+    return (
+        f"cd {shlex.quote(str(PROJECT_ROOT))} && "
+        'lakehouse_env="${LAKEHOUSE_ENV:-prod}" && '
+        f'echo "Running lakehouse command: python -m {module} --env ${{lakehouse_env}}" && '
+        f'python -m {module} --env "${{lakehouse_env}}"'
+    )
 
 
 class FakeDAG:
@@ -69,6 +74,11 @@ def _fresh_import(module_name):
     return importlib.import_module(module_name)
 
 
+def _assert_lakehouse_task_defaults(task):
+    assert task.kwargs["retries"] == 3
+    assert task.kwargs["retry_delay"].total_seconds() == 180
+
+
 def test_dag_modules_import_without_airflow():
     for module in DAG_MODULES:
         importlib.import_module(module)
@@ -108,6 +118,7 @@ def test_single_task_dags_with_airflow(monkeypatch):
         assert len(module.dag.tasks) == 1
         assert module.dag.tasks[0].task_id == task_id
         assert module.dag.tasks[0].bash_command == command
+        _assert_lakehouse_task_defaults(module.dag.tasks[0])
 
 
 def test_full_dag_task_order_and_commands_with_airflow(monkeypatch):
@@ -118,12 +129,16 @@ def test_full_dag_task_order_and_commands_with_airflow(monkeypatch):
     tasks = {task.task_id: task for task in dag.tasks}
 
     assert list(tasks) == [
+        "check_environment",
         "run_bronze",
         "run_silver",
         "run_gold",
         "run_platinum",
         "run_data_quality",
     ]
+    assert tasks["check_environment"].bash_command == _lakehouse_command(
+        "lakehouse.jobs.check_environment"
+    )
     assert tasks["run_bronze"].bash_command == _lakehouse_command(
         "lakehouse.jobs.run_bronze"
     )
@@ -137,6 +152,10 @@ def test_full_dag_task_order_and_commands_with_airflow(monkeypatch):
     assert tasks["run_data_quality"].bash_command == (
         _lakehouse_command("lakehouse.jobs.run_data_quality")
     )
+    for task in tasks.values():
+        _assert_lakehouse_task_defaults(task)
+    assert tasks["check_environment"].downstream_task_ids == {"run_bronze"}
+    assert tasks["run_bronze"].upstream_task_ids == {"check_environment"}
     assert tasks["run_bronze"].downstream_task_ids == {"run_silver"}
     assert tasks["run_silver"].downstream_task_ids == {"run_gold"}
     assert tasks["run_gold"].downstream_task_ids == {"run_platinum"}

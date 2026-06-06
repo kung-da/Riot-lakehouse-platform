@@ -5,6 +5,28 @@ from typing import Any
 
 from lakehouse.common.storage import is_s3_path
 
+S3A_STABILITY_CONF = {
+    "spark.hadoop.fs.s3a.connection.timeout": "600000",
+    "spark.hadoop.fs.s3a.socket.timeout": "600000",
+    "spark.hadoop.fs.s3a.connection.establish.timeout": "600000",
+    "spark.hadoop.fs.s3a.connection.request.timeout": "120000",
+    "spark.hadoop.fs.s3a.connection.acquisition.timeout": "120000",
+    "spark.hadoop.fs.s3a.attempts.maximum": "10",
+    "spark.hadoop.fs.s3a.retry.limit": "10",
+    "spark.hadoop.fs.s3a.connection.maximum": "100",
+    "spark.hadoop.fs.s3a.experimental.input.fadvise": "normal",
+    "spark.hadoop.fs.s3a.readahead.range": "8388608",
+    "spark.hadoop.fs.s3a.fast.upload": "true",
+    "spark.hadoop.mapreduce.outputcommitter.factory.scheme.s3a": (
+        "org.apache.hadoop.fs.s3a.commit.S3ACommitterFactory"
+    ),
+    "spark.hadoop.fs.s3a.committer.name": "directory",
+    "spark.hadoop.fs.s3a.committer.staging.conflict-mode": "replace",
+    "spark.hadoop.fs.s3a.committer.staging.tmp.path": "/tmp/s3a",
+    "spark.hadoop.mapreduce.fileoutputcommitter.algorithm.version": "2",
+    "spark.hadoop.mapreduce.fileoutputcommitter.cleanup-failures.ignored": "true",
+}
+
 
 def _config_uses_s3(config: Any | None) -> bool:
     if config is None:
@@ -34,7 +56,21 @@ def _apply_s3_defaults(builder: Any, config: Any | None, spark_config: dict[str,
 
     if spark_config.get("include_hadoop_aws_package", False):
         package = spark_config.get("hadoop_aws_package", "org.apache.hadoop:hadoop-aws:3.4.2")
-        builder = builder.config("spark.jars.packages", str(package))
+        packages = [
+            item.strip()
+            for item in str(package).split(",")
+            if item.strip()
+        ]
+        if spark_config.get("include_spark_hadoop_cloud_package", False):
+            packages.append(
+                str(
+                    spark_config.get(
+                        "spark_hadoop_cloud_package",
+                        "org.apache.spark:spark-hadoop-cloud_2.13:4.1.2",
+                    )
+                )
+            )
+        builder = builder.config("spark.jars.packages", ",".join(dict.fromkeys(packages)))
 
     region = _aws_setting(aws_config, "region", "AWS_REGION") or os.getenv("AWS_DEFAULT_REGION")
     endpoint = _aws_setting(aws_config, "s3_endpoint_url", "AWS_S3_ENDPOINT_URL")
@@ -45,8 +81,9 @@ def _apply_s3_defaults(builder: Any, config: Any | None, spark_config: dict[str,
 
     builder = (
         builder.config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
-        .config("spark.hadoop.fs.s3a.fast.upload", "true")
     )
+    for key, value in S3A_STABILITY_CONF.items():
+        builder = builder.config(key, value)
     credentials_provider = spark_config.get("aws_credentials_provider")
     if credentials_provider:
         builder = builder.config(
@@ -101,7 +138,21 @@ def get_spark(
         .config("spark.sql.shuffle.partitions", str(spark_config.get("shuffle_partitions", 2)))
         .config("spark.default.parallelism", str(spark_config.get("default_parallelism", 2)))
         .config("spark.driver.memory", str(spark_config.get("driver_memory", "4g")))
+        .config("spark.task.maxFailures", str(spark_config.get("task_max_failures", 4)))
+        .config(
+            "spark.stage.maxConsecutiveAttempts",
+            str(spark_config.get("stage_max_consecutive_attempts", 4)),
+        )
+        .config(
+            "spark.sql.files.maxPartitionBytes",
+            str(spark_config.get("files_max_partition_bytes", 33554432)),
+        )
+        .config("spark.sql.files.ignoreCorruptFiles", "false")
+        .config("spark.sql.files.ignoreMissingFiles", "false")
         .config("spark.sql.parquet.enableVectorizedReader", "false")
+        .config("spark.hadoop.parquet.hadoop.vectored.io.enabled", "false")
+        .config("spark.hadoop.parquet.enable.vectored.io", "false")
+        .config("spark.sql.adaptive.enabled", "false")
         .config("spark.sql.sources.partitionColumnTypeInference.enabled", "false")
     )
     builder = _apply_s3_defaults(builder, config, spark_config)

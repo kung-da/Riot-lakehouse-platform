@@ -1,12 +1,16 @@
 from __future__ import annotations
 
+import hashlib
 import json
+import os
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Mapping
+from urllib.parse import unquote, urlsplit
 
 from lakehouse.common.logging import get_logger
 from lakehouse.common.spark import get_spark
-from lakehouse.common.storage import has_files, to_spark_path
+from lakehouse.common.storage import has_files, is_s3_path, to_spark_path, write_parquet_dataset
 from lakehouse.silver.clean_matches import clean_match
 from lakehouse.silver.clean_participants import clean_participants
 from lakehouse.silver.clean_ranked import clean_ranked
@@ -256,6 +260,11 @@ def _has_parquet_files(path: Any) -> bool:
     return has_files(path, "*.parquet")
 
 
+def _has_raw_json_files(path: Any, datasets: list[str] | None = None) -> bool:
+    selected = datasets or VALID_DATASETS
+    return any(has_files(path / dataset, "*.json") for dataset in selected)
+
+
 def _selected_tables(tables: list[str] | None) -> list[str]:
     selected = tables or SILVER_TABLES
     unknown = sorted(set(selected) - set(SILVER_TABLES))
@@ -387,6 +396,26 @@ def _silver_output_partitions(config: Any) -> int:
     return int(silver_config.get("output_partitions", 1))
 
 
+def _silver_cache_bronze(config: Any) -> bool:
+    silver_config = config.values.get("silver", {}) if hasattr(config, "values") else {}
+    return bool(silver_config.get("cache_bronze", True))
+
+
+def _silver_cache_storage_level(config: Any) -> str:
+    silver_config = config.values.get("silver", {}) if hasattr(config, "values") else {}
+    return str(silver_config.get("cache_storage_level", "MEMORY_AND_DISK")).upper()
+
+
+def _silver_source(config: Any) -> str:
+    silver_config = config.values.get("silver", {}) if hasattr(config, "values") else {}
+    return str(silver_config.get("source", "bronze")).lower()
+
+
+def _silver_raw_input_partitions(config: Any) -> int:
+    silver_config = config.values.get("silver", {}) if hasattr(config, "values") else {}
+    return int(silver_config.get("raw_input_partitions", 256))
+
+
 def _silver_partition_columns(config: Any) -> list[str]:
     partition_config = (
         config.values.get("partition_columns", {}) if hasattr(config, "values") else {}
@@ -405,12 +434,14 @@ def _write_table(
     if output_partitions < 1:
         raise ValueError("silver.output_partitions must be greater than zero")
 
-    dataframe = dataframe.coalesce(output_partitions)
-    writer = dataframe.write.mode(mode).option("compression", "snappy")
     available_partitions = [column for column in partition_columns if column in dataframe.columns]
-    if available_partitions:
-        writer = writer.partitionBy(*available_partitions)
-    writer.parquet(_spark_path(output_path))
+    write_parquet_dataset(
+        dataframe=dataframe,
+        output_path=output_path,
+        mode=mode,
+        partition_columns=available_partitions,
+        output_partitions=output_partitions,
+    )
 
 
 def _dedupe_table(dataframe: Any, table: str) -> Any:
@@ -423,6 +454,144 @@ def _dedupe_table(dataframe: Any, table: str) -> Any:
     return dataframe.dropDuplicates(available_keys)
 
 
+def _plain_file_path(path: str) -> str:
+    parsed = urlsplit(path)
+    if parsed.scheme == "file":
+        return unquote(parsed.path)
+    return path
+
+
+def _source_file_for_raw_path(raw_root: Any, path: str) -> str:
+    plain_path = _plain_file_path(path).replace("\\", "/")
+    raw_root_text = str(raw_root.as_posix() if hasattr(raw_root, "as_posix") else raw_root)
+    raw_parent = os.path.dirname(raw_root_text.replace("\\", "/").rstrip("/"))
+    if raw_parent and plain_path.startswith(raw_parent.rstrip("/") + "/"):
+        return plain_path.removeprefix(raw_parent.rstrip("/") + "/")
+    return plain_path
+
+
+def _raw_ingest_time(path: str) -> datetime:
+    plain_path = _plain_file_path(path)
+    try:
+        return datetime.fromtimestamp(os.path.getmtime(plain_path), tz=timezone.utc)
+    except OSError:
+        return datetime.now(timezone.utc)
+
+
+def _raw_pair_to_bronze_row(
+    item: tuple[str, str],
+    dataset: str,
+    raw_root: Any,
+) -> tuple[str, str, str, str, str, str]:
+    path, payload_json = item
+    payload_bytes = payload_json.encode("utf-8")
+    ingest_time = _raw_ingest_time(path)
+    return (
+        dataset,
+        _source_file_for_raw_path(raw_root, path),
+        hashlib.sha256(payload_bytes).hexdigest(),
+        ingest_time.isoformat(),
+        ingest_time.date().isoformat(),
+        payload_json,
+    )
+
+
+def _local_raw_path_to_bronze_row(
+    item: tuple[str, str, str],
+) -> tuple[str, str, str, str, str, str] | None:
+    dataset, path_text, raw_root_text = item
+    path = Path(path_text)
+    try:
+        raw_bytes = path.read_bytes()
+        payload_json = raw_bytes.decode("utf-8")
+        ingest_time = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
+    except (OSError, UnicodeDecodeError) as exc:
+        LOGGER.warning("Skipping invalid raw JSON file %s: %s", path, exc)
+        return None
+    return (
+        dataset,
+        _source_file_for_raw_path(raw_root_text, path.as_posix()),
+        hashlib.sha256(raw_bytes).hexdigest(),
+        ingest_time.isoformat(),
+        ingest_time.date().isoformat(),
+        payload_json,
+    )
+
+
+def _bronze_schema() -> Any:
+    from pyspark.sql.types import StringType, StructField, StructType
+
+    return StructType(
+        [
+            StructField("dataset", StringType(), nullable=True),
+            StructField("source_file", StringType(), nullable=True),
+            StructField("file_hash", StringType(), nullable=True),
+            StructField("ingest_ts", StringType(), nullable=True),
+            StructField("ingest_date", StringType(), nullable=True),
+            StructField("payload_json", StringType(), nullable=True),
+        ]
+    )
+
+
+def _read_raw_as_bronze(
+    spark: Any,
+    config: Any,
+    selected_datasets: list[str] | None,
+) -> Any:
+    datasets = selected_datasets or VALID_DATASETS
+    raw_root = config.raw_root
+    min_partitions = _silver_raw_input_partitions(config)
+    if not is_s3_path(raw_root):
+        raw_root_path = Path(raw_root)
+        raw_items: list[tuple[str, str, str]] = []
+        for dataset in datasets:
+            raw_dataset_path = raw_root_path / dataset
+            if raw_dataset_path.exists():
+                raw_items.extend(
+                    (dataset, path.as_posix(), raw_root_path.as_posix())
+                    for path in raw_dataset_path.rglob("*.json")
+                )
+        LOGGER.info("Reading %s local raw JSON files for Silver", len(raw_items))
+        raw_rdd = spark.sparkContext.parallelize(raw_items, min_partitions)
+        rows = raw_rdd.map(_local_raw_path_to_bronze_row).filter(lambda row: row is not None)
+        return spark.createDataFrame(rows, schema=_bronze_schema())
+
+    raw_rdds = []
+    for dataset in datasets:
+        raw_dataset_path = raw_root / dataset
+        if not has_files(raw_dataset_path, "*.json"):
+            continue
+        path = _spark_path(raw_dataset_path / "*.json")
+        raw_rdds.append(
+            spark.sparkContext.wholeTextFiles(path, min_partitions).map(
+                lambda item, dataset=dataset, raw_root=raw_root: _raw_pair_to_bronze_row(
+                    item,
+                    dataset,
+                    raw_root,
+                )
+            )
+        )
+    if not raw_rdds:
+        return spark.createDataFrame([], schema=_bronze_schema())
+    return spark.createDataFrame(spark.sparkContext.union(raw_rdds), schema=_bronze_schema())
+
+
+def _storage_level_from_name(name: str) -> Any:
+    from pyspark import StorageLevel
+
+    levels = {
+        "DISK_ONLY": StorageLevel.DISK_ONLY,
+        "MEMORY_ONLY": StorageLevel.MEMORY_ONLY,
+        "MEMORY_AND_DISK": StorageLevel.MEMORY_AND_DISK,
+        "MEMORY_AND_DISK_DESER": StorageLevel.MEMORY_AND_DISK_DESER,
+    }
+    try:
+        return levels[name]
+    except KeyError as exc:
+        valid = ", ".join(sorted(levels))
+        raise ValueError(f"Unknown silver.cache_storage_level {name!r}. Use one of: {valid}") from exc
+
+
 def run_silver_transform(
     config: Any,
     datasets: list[str] | None = None,
@@ -432,27 +601,45 @@ def run_silver_transform(
     bronze_path = config.layer_path("bronze", "raw_json")
     selected_tables = _selected_tables(tables)
     selected_datasets = _selected_datasets(datasets)
+    source = _silver_source(config)
     counts = {table: 0 for table in selected_tables}
 
-    if not _has_parquet_files(bronze_path):
+    if source not in {"bronze", "raw"}:
+        raise ValueError("silver.source must be 'bronze' or 'raw'")
+    if source == "bronze" and not _has_parquet_files(bronze_path):
         LOGGER.warning("Bronze input path has no Parquet files: %s", bronze_path)
+        return counts
+    if source == "raw" and not _has_raw_json_files(config.raw_root, selected_datasets):
+        LOGGER.warning("Raw input path has no JSON files: %s", config.raw_root)
         return counts
 
     spark = get_spark(config=config)
     mode = _silver_write_mode(config, write_mode)
     partition_columns = _silver_partition_columns(config)
     output_partitions = _silver_output_partitions(config)
+    cache_bronze = _silver_cache_bronze(config)
+    storage_level = _storage_level_from_name(_silver_cache_storage_level(config))
+    bronze = None
+    bronze_cached = False
     try:
-        bronze = spark.read.parquet(_spark_path(bronze_path)).select(
-            "dataset",
-            "source_file",
-            "file_hash",
-            "ingest_ts",
-            "ingest_date",
-            "payload_json",
-        )
-        if selected_datasets is not None:
+        if source == "raw":
+            if cache_bronze:
+                bronze = _read_raw_as_bronze(spark, config, selected_datasets)
+        else:
+            bronze = spark.read.parquet(_spark_path(bronze_path)).select(
+                "dataset",
+                "source_file",
+                "file_hash",
+                "ingest_ts",
+                "ingest_date",
+                "payload_json",
+            )
+        if bronze is not None and selected_datasets is not None:
             bronze = bronze.where(bronze.dataset.isin(*selected_datasets))
+        if bronze is not None and cache_bronze:
+            bronze = bronze.persist(storage_level)
+            bronze.count()
+            bronze_cached = True
 
         for table in selected_tables:
             table_datasets = TABLE_DATASETS[table]
@@ -461,12 +648,15 @@ def run_silver_transform(
             ):
                 continue
 
-            table_bronze = bronze.where(bronze.dataset.isin(*table_datasets))
+            if source == "raw" and bronze is None:
+                table_bronze = _read_raw_as_bronze(spark, config, table_datasets)
+            else:
+                table_bronze = bronze.where(bronze.dataset.isin(*table_datasets))
             rows = table_bronze.rdd.mapPartitions(_rows_for_table(table, selected_datasets))
             dataframe = _dedupe_table(
                 spark.createDataFrame(rows, schema=_silver_schema(table)),
                 table,
-            ).cache()
+            ).persist(storage_level)
             row_count = dataframe.count()
             output_path = config.layer_path("silver", table)
             try:
@@ -484,4 +674,9 @@ def run_silver_transform(
             LOGGER.info("Silver table %s wrote %s rows to %s", table, row_count, output_path)
         return counts
     finally:
-        spark.stop()
+        if bronze_cached and bronze is not None:
+            bronze.unpersist()
+        try:
+            spark.stop()
+        except Exception as exc:
+            LOGGER.warning("Spark stop failed after Silver transform: %s", exc)

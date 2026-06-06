@@ -17,15 +17,50 @@ partition_columns:
     - game_date
 spark:
   app_name: ${SPARK_APP_NAME:-riot-lakehouse-prod}
-  master: ${SPARK_MASTER:-local[*]}
+  master: ${SPARK_S3_MASTER:-local[4]}
   enable_delta: ${SPARK_ENABLE_DELTA:-false}
   driver_memory: ${SPARK_DRIVER_MEMORY:-4g}
   shuffle_partitions: ${SPARK_SHUFFLE_PARTITIONS:-8}
   default_parallelism: ${SPARK_DEFAULT_PARALLELISM:-8}
+  task_max_failures: ${SPARK_TASK_MAX_FAILURES:-4}
+  stage_max_consecutive_attempts: ${SPARK_STAGE_MAX_CONSECUTIVE_ATTEMPTS:-4}
+  files_max_partition_bytes: ${SPARK_SQL_FILES_MAX_PARTITION_BYTES:-33554432}
   include_hadoop_aws_package: ${SPARK_INCLUDE_HADOOP_AWS_PACKAGE:-true}
+  include_spark_hadoop_cloud_package: ${SPARK_INCLUDE_HADOOP_CLOUD_PACKAGE:-false}
+  spark_hadoop_cloud_package: ${SPARK_HADOOP_CLOUD_PACKAGE:-org.apache.spark:spark-hadoop-cloud_2.13:4.1.2}
+  conf:
+    spark.hadoop.fs.s3a.connection.timeout: ${SPARK_S3A_CONNECTION_TIMEOUT:-600000}
+    spark.hadoop.fs.s3a.socket.timeout: ${SPARK_S3A_SOCKET_TIMEOUT:-600000}
+    spark.hadoop.fs.s3a.connection.establish.timeout: ${SPARK_S3A_CONNECTION_ESTABLISH_TIMEOUT:-600000}
+    spark.hadoop.fs.s3a.connection.request.timeout: ${SPARK_S3A_CONNECTION_REQUEST_TIMEOUT:-120000}
+    spark.hadoop.fs.s3a.connection.acquisition.timeout: ${SPARK_S3A_CONNECTION_ACQUISITION_TIMEOUT:-120000}
+    spark.hadoop.fs.s3a.attempts.maximum: ${SPARK_S3A_ATTEMPTS_MAXIMUM:-10}
+    spark.hadoop.fs.s3a.retry.limit: ${SPARK_S3A_RETRY_LIMIT:-10}
+    spark.hadoop.fs.s3a.connection.maximum: ${SPARK_S3A_CONNECTION_MAXIMUM:-100}
+    spark.hadoop.fs.s3a.experimental.input.fadvise: ${SPARK_S3A_INPUT_FADVISE:-normal}
+    spark.hadoop.fs.s3a.readahead.range: ${SPARK_S3A_READAHEAD_RANGE:-8388608}
+    spark.hadoop.fs.s3a.fast.upload: ${SPARK_S3A_FAST_UPLOAD:-true}
+    spark.hadoop.mapreduce.outputcommitter.factory.scheme.s3a: ${SPARK_S3A_OUTPUTCOMMITTER_FACTORY:-org.apache.hadoop.fs.s3a.commit.S3ACommitterFactory}
+    spark.hadoop.fs.s3a.committer.name: ${SPARK_S3A_COMMITTER_NAME:-directory}
+    spark.hadoop.fs.s3a.committer.staging.conflict-mode: ${SPARK_S3A_COMMITTER_CONFLICT_MODE:-replace}
+    spark.hadoop.fs.s3a.committer.staging.tmp.path: ${SPARK_S3A_COMMITTER_TMP_PATH:-/tmp/s3a}
+    spark.hadoop.mapreduce.fileoutputcommitter.algorithm.version: ${SPARK_FILEOUTPUTCOMMITTER_ALGORITHM_VERSION:-2}
+    spark.hadoop.mapreduce.fileoutputcommitter.cleanup-failures.ignored: ${SPARK_FILEOUTPUTCOMMITTER_CLEANUP_FAILURES_IGNORED:-true}
+    spark.sql.files.maxPartitionBytes: ${SPARK_SQL_FILES_MAX_PARTITION_BYTES:-33554432}
+    spark.task.maxFailures: ${SPARK_TASK_MAX_FAILURES:-4}
+    spark.stage.maxConsecutiveAttempts: ${SPARK_STAGE_MAX_CONSECUTIVE_ATTEMPTS:-4}
+    spark.sql.files.ignoreCorruptFiles: ${SPARK_SQL_FILES_IGNORE_CORRUPT_FILES:-false}
+    spark.sql.files.ignoreMissingFiles: ${SPARK_SQL_FILES_IGNORE_MISSING_FILES:-false}
+    spark.sql.parquet.enableVectorizedReader: ${SPARK_SQL_PARQUET_ENABLE_VECTORIZED_READER:-false}
+    spark.hadoop.parquet.hadoop.vectored.io.enabled: ${SPARK_HADOOP_PARQUET_HADOOP_VECTORED_IO_ENABLED:-false}
+    spark.hadoop.parquet.enable.vectored.io: ${SPARK_HADOOP_PARQUET_ENABLE_VECTORED_IO:-false}
+    spark.sql.adaptive.enabled: ${SPARK_SQL_ADAPTIVE_ENABLED:-false}
 silver:
   write_mode: overwrite
   output_partitions: ${SILVER_OUTPUT_PARTITIONS:-8}
+  source: ${SILVER_SOURCE:-bronze}
+  cache_bronze: ${SILVER_CACHE_BRONZE:-true}
+  cache_storage_level: ${SILVER_CACHE_STORAGE_LEVEL:-MEMORY_AND_DISK}
 gold:
   write_mode: overwrite
   output_partitions: ${GOLD_OUTPUT_PARTITIONS:-8}
