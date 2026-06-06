@@ -483,6 +483,10 @@ Các DAG hiện có:
 
 Airflow metadata local được lưu tại `metadata/airflow/`.
 
+Airflow UI example:
+
+![Airflow DAG Run](docs/images/airflow.png)
+
 ## AWS S3, Glue Data Catalog Và Athena
 
 ### Cấu Hình S3
@@ -591,6 +595,12 @@ Nếu gặp S3 Parquet timeout kiểu `ParquetFileReader.readVectored`, hãy:
 | `checkpoint_root` | `s3://<bucket>/<checkpoint-prefix>` |
 | `report_root` | `s3://<bucket>/<report-prefix>` |
 
+S3 output example sau khi chạy pipeline trên production-style config:
+
+![S3 Lakehouse Output](docs/images/output-s3.png)
+
+Bronze giữ format Parquet. Silver và Gold ghi Delta Lake, nên mỗi table Delta có thư mục `_delta_log/`.
+
 ### Glue Data Catalog
 
 Athena dùng Glue Data Catalog để quản lý metadata. DDL templates nằm tại:
@@ -661,13 +671,21 @@ Các bước kết nối:
 4. Kết nối Power BI bằng Amazon Athena connector hoặc ODBC driver.
 5. Import hoặc DirectQuery các bảng mart.
 
-Dashboard overview:
+Executive overview:
 
-![Power BI Dashboard Overview](docs/images/powerbi-dashboard-overview.png)
+![Power BI Executive Overview](docs/images/Executive_Overview.png)
 
-Match analytics:
+Player performance:
 
-![Power BI Match Analytics](docs/images/powerbi-match-analytics.png)
+![Power BI Player Performance](docs/images/Player_Performance.png)
+
+Champion and role meta:
+
+![Power BI Champion Role Meta](docs/images/Champion_RoleMeta.png)
+
+Rank analysis:
+
+![Power BI Rank Dashboard](docs/images/Rank.png)
 
 Gợi ý KPI:
 
@@ -809,7 +827,7 @@ Secrets nên đặt trong GitHub Actions Secrets:
 - [x] Hỗ trợ Delta Lake cho Silver/Gold ở production.
 - [ ] Đánh giá Iceberg table format cho use case cần engine-neutral writes.
 - [ ] Thêm alerting qua Airflow/CloudWatch.
-- [ ] Thêm dashboard screenshots thực tế vào `docs/images/`.
+- [x] Thêm dashboard screenshots thực tế vào `docs/images/`.
 
 ## Security
 
